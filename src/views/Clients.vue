@@ -43,7 +43,7 @@
         </Column>
         <Column header="">
           <template #body="{ data }">
-            <Button icon="pi pi-pencil" size="small" text @click="openEdit(data)" />
+            <Button label="Edit" size="small" severity="info" outlined @click="openEdit(data)" />
           </template>
         </Column>
       </DataTable>
@@ -73,7 +73,7 @@
         </Column>
         <Column header="">
           <template #body="{ data }">
-            <Button icon="pi pi-pencil" size="small" text @click="openEdit(data)" />
+            <Button label="Edit" size="small" severity="info" outlined @click="openEdit(data)" />
           </template>
         </Column>
       </DataTable>
@@ -133,8 +133,7 @@
         </div>
       </div>
       <template #footer>
-        <Button label="Cancel" severity="secondary" text @click="showEditDialog = false" />
-        <Button label="Save" :loading="saving" @click="handleSave" />
+        <CreateEditFooter :loading="saving" @cancel="showEditDialog = false" @save="handleSave" />
       </template>
     </Dialog>
     <!-- Create Dialog -->
@@ -197,8 +196,7 @@
         </div>
       </div>
       <template #footer>
-        <Button label="Cancel" severity="secondary" text @click="showCreateDialog = false" />
-        <Button label="Create Client" :loading="creating" :disabled="!canCreate" @click="handleCreate" />
+        <CreateEditFooter saveLabel="Create Client" :loading="creating" :disabled="!canCreate" @cancel="showCreateDialog = false" @save="handleCreate" />
       </template>
     </Dialog>
   </div>
@@ -213,6 +211,7 @@ import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
+import CreateEditFooter from '@/components/CreateEditFooter.vue'
 import Message from 'primevue/message'
 import { ClientsService, Location, MembershipStatus } from '@/api'
 import type { ClientResponse, UpdateClientRequest, CreateClientRequest } from '@/api'
@@ -419,4 +418,5 @@ function truncate(text: string, max = 40): string {
 .form-row :deep(textarea) {
   width: 100%;
 }
+
 </style>

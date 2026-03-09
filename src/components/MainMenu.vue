@@ -15,6 +15,16 @@
         />
       </a>
     </template>
+    <template #end>
+      <Button
+        icon="pi pi-refresh"
+        label="Refresh Dashboard"
+        :loading="refreshing"
+        severity="secondary"
+        text
+        @click="$emit('refresh')"
+      />
+    </template>
   </Menubar>
 </template>
 
@@ -23,10 +33,14 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Menubar from 'primevue/menubar'
 import Badge from 'primevue/badge'
+import Button from 'primevue/button'
 import logo from '@/assets/images/zenlogo_nobackground_resized_md.png'
 import { useClientStore } from '@/stores/clients'
 import { useSuggestionsStore } from '@/stores/suggestions'
 import { useTodoStore } from '@/stores/todos'
+
+defineProps<{ refreshing: boolean }>()
+defineEmits<{ refresh: [] }>()
 
 const router = useRouter()
 const { confirmedClientsWithIncompleteData } = useClientStore()

@@ -34,14 +34,17 @@
     <div v-if="selectedTemplates.length" class="template-cards">
       <div v-for="t in selectedTemplates" :key="t.id" class="template-card">
         <div class="template-card-header">
-          <span class="template-card-title">{{ t.title }}</span>
-          <Button icon="pi pi-pencil" size="small" text @click="openEdit(t)" />
+          <div class="template-card-title-group">
+            <span class="template-card-title">{{ t.title }}</span>
+            <span class="template-card-due">Due {{ t.days_until_due }} day{{ t.days_until_due === 1 ? '' : 's' }} after event</span>
+          </div>
+          <Button label="Edit" size="small" severity="info" outlined @click="openEdit(t)" />
+          <Badge :value="t.order" severity="secondary" />
         </div>
         <div class="template-card-meta">
           <Tag :value="t.todo_type" severity="info" />
-          <span class="template-card-due">{{ t.days_until_due }} day{{ t.days_until_due === 1 ? '' : 's' }} after event</span>
         </div>
-        <p v-if="t.notes" class="template-card-notes">{{ t.notes }}</p>
+        <div v-if="t.notes" class="template-card-notes" v-html="marked(t.notes)" />
       </div>
     </div>
 
@@ -57,10 +60,7 @@
           <label>Title</label>
           <InputText v-model="createForm.title" />
         </div>
-        <div class="form-row">
-          <label>Notes</label>
-          <Textarea v-model="createForm.notes" rows="3" autoResize />
-        </div>
+        <MarkdownEditor ref="createNotesEditor" v-model="createForm.notes" />
         <div class="form-row">
           <label>Todo Type</label>
           <Select
@@ -79,8 +79,7 @@
         </div>
       </div>
       <template #footer>
-        <Button label="Cancel" severity="secondary" text @click="showCreateDialog = false" />
-        <Button label="Save" :loading="saving" :disabled="!canSaveCreate" @click="handleCreate" />
+        <CreateEditFooter saveLabel="Create Template" :loading="saving" :disabled="!canSaveCreate" @cancel="showCreateDialog = false" @save="handleCreate" />
       </template>
     </Dialog>
 
@@ -96,10 +95,7 @@
           <label>Title</label>
           <InputText v-model="editForm.title" />
         </div>
-        <div class="form-row">
-          <label>Notes</label>
-          <Textarea v-model="editForm.notes" rows="3" autoResize />
-        </div>
+        <MarkdownEditor ref="editNotesEditor" v-model="editForm.notes" />
         <div class="form-row">
           <label>Days Until Due</label>
           <InputNumber v-model="editForm.days_until_due" :min="0" />
@@ -110,15 +106,7 @@
         </div>
       </div>
       <template #footer>
-        <Button
-          label="Delete"
-          severity="danger"
-          text
-          @click="showDeleteDialog = true"
-          class="delete-button"
-        />
-        <Button label="Cancel" severity="secondary" text @click="showEditDialog = false" />
-        <Button label="Save" :loading="saving" :disabled="!canSaveEdit" @click="handleEdit" />
+        <CreateEditFooter :loading="saving" :disabled="!canSaveEdit" showDelete @cancel="showEditDialog = false" @save="handleEdit" @delete="showDeleteDialog = true" />
       </template>
     </Dialog>
 
@@ -144,9 +132,14 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
-import Textarea from 'primevue/textarea'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
+import Badge from 'primevue/badge'
+import { marked } from 'marked'
+import MarkdownEditor from '@/components/MarkdownEditor.vue'
+import CreateEditFooter from '@/components/CreateEditFooter.vue'
+
+marked.setOptions({ breaks: true })
 import { MeetingTypeTodoTemplatesService, MeetingType, TodoType } from '@/api'
 import type { MeetingTypeTodoTemplateResponse, UpdateMeetingTypeTodoTemplateRequest } from '@/api'
 import { requestWrapper } from '@/api/client'
@@ -162,6 +155,8 @@ const showEditDialog = ref(false)
 const showDeleteDialog = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
+const createNotesEditor = ref<InstanceType<typeof MarkdownEditor> | null>(null)
+const editNotesEditor = ref<InstanceType<typeof MarkdownEditor> | null>(null)
 
 const todoTypeOptions = Object.values(TodoType)
 
@@ -186,12 +181,15 @@ const canSaveCreate = computed(() =>
 )
 
 function openCreate() {
+  createNotesEditor.value?.resetPreview()
   createForm.value = {
     title: '',
     notes: '',
     todo_type: null,
-    days_until_due: 0,
-    order: selectedTemplates.value.length,
+    days_until_due: 1,
+    order: selectedTemplates.value.length
+      ? Math.max(...selectedTemplates.value.map((t) => t.order)) + 1
+      : 1,
   }
   showCreateDialog.value = true
 }
@@ -225,6 +223,7 @@ const editForm = ref<UpdateMeetingTypeTodoTemplateRequest | null>(null)
 const canSaveEdit = computed(() => !!editForm.value?.title)
 
 function openEdit(template: MeetingTypeTodoTemplateResponse) {
+  editNotesEditor.value?.resetPreview()
   editingTemplateId.value = template.id
   editForm.value = {
     title: template.title,
@@ -337,7 +336,7 @@ async function handleDelete() {
 .template-card-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .template-card-title {
@@ -352,15 +351,44 @@ async function handleDelete() {
   margin-top: 0.5rem;
 }
 
+.template-card-title-group {
+  flex: 1;
+  min-width: 0;
+}
+
 .template-card-due {
-  font-size: 0.8rem;
-  color: var(--p-surface-500);
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--p-surface-600);
+  margin-top: 0.125rem;
 }
 
 .template-card-notes {
   margin: 0.5rem 0 0;
   font-size: 0.85rem;
   color: var(--p-surface-600);
+}
+
+.template-card-notes :deep(p) {
+  margin: 0 0 0.5rem;
+}
+
+.template-card-notes :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.template-card-notes :deep(ul),
+.template-card-notes :deep(ol) {
+  margin: 0 0 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.template-card-notes :deep(code) {
+  background: var(--p-surface-100);
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
 }
 
 .edit-form {
@@ -388,7 +416,4 @@ async function handleDelete() {
   width: 100%;
 }
 
-.delete-button {
-  margin-right: auto;
-}
 </style>

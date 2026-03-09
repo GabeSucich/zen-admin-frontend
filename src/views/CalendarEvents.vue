@@ -195,10 +195,12 @@ import { requestWrapper } from '@/api/client'
 import { useSuggestionsStore } from '@/stores/suggestions'
 import { useMeetingTypesStore } from '@/stores/meetingTypes'
 import { useClientStore } from '@/stores/clients'
+import { useTodoStore } from '@/stores/todos'
 
 const { suggestions, loadSuggestions } = useSuggestionsStore()
 const { meetingTypes } = useMeetingTypesStore()
-const { confirmedClients: rawConfirmedClients } = useClientStore()
+const { confirmedClients: rawConfirmedClients, loadClients } = useClientStore()
+const { loadTodos } = useTodoStore()
 
 const selected = ref<CalendarEventClientSuggestionResponse | null>(null)
 const selectedMeetingType = ref<MeetingType | null>(null)
@@ -256,6 +258,8 @@ async function handleConfirm() {
       ),
     )
     await loadSuggestions()
+    loadClients()
+    loadTodos()
     selectFirstSuggestion()
   } finally {
     confirming.value = false

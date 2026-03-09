@@ -20,12 +20,12 @@
           <div class="todo-card-meta">
             <Tag :value="t.todo_type" severity="info" />
           </div>
-          <p v-if="t.notes" class="todo-card-notes">{{ t.notes }}</p>
+          <div v-if="t.notes" class="todo-card-notes" v-html="marked(t.notes)" />
           <div class="todo-card-actions">
             <Button icon="pi pi-trash" size="small" severity="danger" text @click="openDeleteFromCard(t)" />
             <div class="todo-card-actions-right">
               <Button label="Edit" size="small" severity="info" outlined @click="openEdit(t)" />
-              <Button label="Mark completed" size="small" severity="success" @click="openComplete(t)" />
+              <Button label="Mark completed" size="small" severity="success" class="mark-completed-btn" @click="openComplete(t)" />
             </div>
           </div>
         </div>
@@ -47,12 +47,12 @@
           <div class="todo-card-meta">
             <Tag :value="t.todo_type" severity="info" />
           </div>
-          <p v-if="t.notes" class="todo-card-notes">{{ t.notes }}</p>
+          <div v-if="t.notes" class="todo-card-notes" v-html="marked(t.notes)" />
           <div class="todo-card-actions">
             <Button icon="pi pi-trash" size="small" severity="danger" text @click="openDeleteFromCard(t)" />
             <div class="todo-card-actions-right">
               <Button label="Edit" size="small" severity="info" outlined @click="openEdit(t)" />
-              <Button label="Mark completed" size="small" severity="success" @click="openComplete(t)" />
+              <Button label="Mark completed" size="small" severity="success" class="mark-completed-btn" @click="openComplete(t)" />
             </div>
           </div>
         </div>
@@ -74,12 +74,12 @@
           <div class="todo-card-meta">
             <Tag :value="t.todo_type" severity="info" />
           </div>
-          <p v-if="t.notes" class="todo-card-notes">{{ t.notes }}</p>
+          <div v-if="t.notes" class="todo-card-notes" v-html="marked(t.notes)" />
           <div class="todo-card-actions">
             <Button icon="pi pi-trash" size="small" severity="danger" text @click="openDeleteFromCard(t)" />
             <div class="todo-card-actions-right">
               <Button label="Edit" size="small" severity="info" outlined @click="openEdit(t)" />
-              <Button label="Mark completed" size="small" severity="success" @click="openComplete(t)" />
+              <Button label="Mark completed" size="small" severity="success" class="mark-completed-btn" @click="openComplete(t)" />
             </div>
           </div>
         </div>
@@ -101,12 +101,12 @@
           <div class="todo-card-meta">
             <Tag :value="t.todo_type" severity="info" />
           </div>
-          <p v-if="t.notes" class="todo-card-notes">{{ t.notes }}</p>
+          <div v-if="t.notes" class="todo-card-notes" v-html="marked(t.notes)" />
           <div class="todo-card-actions">
             <Button icon="pi pi-trash" size="small" severity="danger" text @click="openDeleteFromCard(t)" />
             <div class="todo-card-actions-right">
               <Button label="Edit" size="small" severity="info" outlined @click="openEdit(t)" />
-              <Button label="Mark completed" size="small" severity="success" @click="openComplete(t)" />
+              <Button label="Mark completed" size="small" severity="success" class="mark-completed-btn" @click="openComplete(t)" />
             </div>
           </div>
         </div>
@@ -153,14 +153,10 @@
             showClear
           />
         </div>
-        <div class="form-row">
-          <label>Notes</label>
-          <Textarea v-model="createForm.notes" rows="3" autoResize />
-        </div>
+        <MarkdownEditor ref="createNotesEditor" v-model="createForm.notes" />
       </div>
       <template #footer>
-        <Button label="Cancel" severity="secondary" text @click="showCreateDialog = false" />
-        <Button label="Create Todo" :loading="creating" :disabled="!canCreate" @click="handleCreate" />
+        <CreateEditFooter saveLabel="Create Todo" :loading="creating" :disabled="!canCreate" @cancel="showCreateDialog = false" @save="handleCreate" />
       </template>
     </Dialog>
 
@@ -192,21 +188,10 @@
             showClear
           />
         </div>
-        <div class="form-row">
-          <label>Notes</label>
-          <Textarea v-model="editForm.notes" rows="3" autoResize />
-        </div>
+        <MarkdownEditor ref="editNotesEditor" v-model="editForm.notes" />
       </div>
       <template #footer>
-        <Button
-          label="Delete"
-          severity="danger"
-          text
-          class="delete-button"
-          @click="showDeleteDialog = true"
-        />
-        <Button label="Cancel" severity="secondary" text @click="showEditDialog = false" />
-        <Button label="Save" :loading="saving" @click="handleEdit" />
+        <CreateEditFooter :loading="saving" showDelete @cancel="showEditDialog = false" @save="handleEdit" @delete="showDeleteDialog = true" />
       </template>
     </Dialog>
 
@@ -283,13 +268,19 @@ import Dialog from 'primevue/dialog'
 import DatePicker from 'primevue/datepicker'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
-import Textarea from 'primevue/textarea'
+import { marked } from 'marked'
+import MarkdownEditor from '@/components/MarkdownEditor.vue'
+import CreateEditFooter from '@/components/CreateEditFooter.vue'
 import { TodosService, TodoType } from '@/api'
 import type { TodoResponse } from '@/api'
 import { requestWrapper } from '@/api/client'
 import { useClientStore } from '@/stores/clients'
 import { useTodoStore } from '@/stores/todos'
 
+marked.setOptions({ breaks: true })
+
+const createNotesEditor = ref<InstanceType<typeof MarkdownEditor> | null>(null)
+const editNotesEditor = ref<InstanceType<typeof MarkdownEditor> | null>(null)
 const { confirmedClients } = useClientStore()
 const { todos, overdue, dueToday, dueTomorrow, dueThisWeek, loadTodos } = useTodoStore()
 
@@ -328,6 +319,7 @@ const canCreate = computed(() =>
 )
 
 function openCreate() {
+  createNotesEditor.value?.resetPreview()
   createForm.value = {
     title: '',
     todo_type: null,
@@ -369,6 +361,7 @@ const editForm = ref<{ title: string; notes: string; client_id: number | null; d
 const editDueDate = ref<Date | null>(null)
 
 function openEdit(todo: TodoResponse) {
+  editNotesEditor.value?.resetPreview()
   editingTodoId.value = todo.id
   editForm.value = {
     title: todo.title,
@@ -595,6 +588,27 @@ async function handleChangeDueDate() {
   color: var(--p-surface-600);
 }
 
+.todo-card-notes :deep(p) {
+  margin: 0 0 0.5rem;
+}
+
+.todo-card-notes :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.todo-card-notes :deep(ul),
+.todo-card-notes :deep(ol) {
+  margin: 0 0 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.todo-card-notes :deep(code) {
+  background: var(--p-surface-100);
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+}
+
 .todo-card-due-row {
   display: flex;
   align-items: center;
@@ -606,7 +620,7 @@ async function handleChangeDueDate() {
   display: inline-block;
   padding: 0.15rem 0.5rem;
   border-radius: 4px;
-  background: var(--p-primary-color);
+  background: #3b82f6;
   color: white;
   font-weight: 600;
   font-size: 0.75rem;
@@ -623,17 +637,14 @@ async function handleChangeDueDate() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
 }
 
 .todo-card-actions-right {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.delete-button {
-  margin-right: auto;
 }
 
 .date-change-form {
@@ -653,4 +664,16 @@ async function handleChangeDueDate() {
   color: var(--p-surface-400);
   font-style: italic;
 }
+
+.mark-completed-btn :deep(.p-button) ,
+.mark-completed-btn {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+
+.mark-completed-btn:hover {
+  background: #15803d;
+  border-color: #15803d;
+}
+
 </style>
