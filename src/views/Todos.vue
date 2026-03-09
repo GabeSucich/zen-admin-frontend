@@ -2,212 +2,14 @@
   <div class="todos-page">
     <div class="todos-header">
       <h2>Todos</h2>
-      <Button label="Add Todo" icon="pi pi-plus" size="small" @click="openCreate" />
+      <div class="tab-bar">
+        <button class="tab-btn" :class="{ active: activeTab === 'upcoming' }" @click="activeTab = 'upcoming'">Upcoming</button>
+        <button class="tab-btn" :class="{ active: activeTab === 'by-client' }" @click="activeTab = 'by-client'">By Client</button>
+      </div>
     </div>
 
-    <section v-if="overdue.length" class="todo-section">
-      <h3 class="section-title overdue">Overdue</h3>
-      <div class="todo-scroll">
-        <div v-for="t in overdue" :key="t.id" class="todo-card overdue">
-          <div class="todo-card-top">
-            <div class="todo-card-title">{{ t.title }}</div>
-            <div class="todo-card-due-row">
-              <span class="todo-card-due-badge">{{ formatDueDate(t.due_date) }}</span>
-              <Button icon="pi pi-calendar" size="small" text @click="openDateChange(t)" />
-            </div>
-          </div>
-          <div v-if="t.client" class="todo-card-client"><i class="pi pi-user" /> {{ t.client.first_name }} {{ t.client.last_name }}</div>
-          <div class="todo-card-meta">
-            <Tag :value="t.todo_type" severity="info" />
-          </div>
-          <div v-if="t.notes" class="todo-card-notes" v-html="marked(t.notes)" />
-          <div class="todo-card-actions">
-            <Button icon="pi pi-trash" size="small" severity="danger" text @click="openDeleteFromCard(t)" />
-            <div class="todo-card-actions-right">
-              <Button label="Edit" size="small" severity="info" outlined @click="openEdit(t)" />
-              <Button label="Mark completed" size="small" severity="success" class="mark-completed-btn" @click="openComplete(t)" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section v-if="dueToday.length" class="todo-section">
-      <h3 class="section-title today">Due Today</h3>
-      <div class="todo-scroll">
-        <div v-for="t in dueToday" :key="t.id" class="todo-card today">
-          <div class="todo-card-top">
-            <div class="todo-card-title">{{ t.title }}</div>
-            <div class="todo-card-due-row">
-              <span class="todo-card-due-badge">{{ formatDueDate(t.due_date) }}</span>
-              <Button icon="pi pi-calendar" size="small" text @click="openDateChange(t)" />
-            </div>
-          </div>
-          <div v-if="t.client" class="todo-card-client"><i class="pi pi-user" /> {{ t.client.first_name }} {{ t.client.last_name }}</div>
-          <div class="todo-card-meta">
-            <Tag :value="t.todo_type" severity="info" />
-          </div>
-          <div v-if="t.notes" class="todo-card-notes" v-html="marked(t.notes)" />
-          <div class="todo-card-actions">
-            <Button icon="pi pi-trash" size="small" severity="danger" text @click="openDeleteFromCard(t)" />
-            <div class="todo-card-actions-right">
-              <Button label="Edit" size="small" severity="info" outlined @click="openEdit(t)" />
-              <Button label="Mark completed" size="small" severity="success" class="mark-completed-btn" @click="openComplete(t)" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section v-if="dueTomorrow.length" class="todo-section">
-      <h3 class="section-title tomorrow">Tomorrow</h3>
-      <div class="todo-scroll">
-        <div v-for="t in dueTomorrow" :key="t.id" class="todo-card">
-          <div class="todo-card-top">
-            <div class="todo-card-title">{{ t.title }}</div>
-            <div class="todo-card-due-row">
-              <span class="todo-card-due-badge">{{ formatDueDate(t.due_date) }}</span>
-              <Button icon="pi pi-calendar" size="small" text @click="openDateChange(t)" />
-            </div>
-          </div>
-          <div v-if="t.client" class="todo-card-client"><i class="pi pi-user" /> {{ t.client.first_name }} {{ t.client.last_name }}</div>
-          <div class="todo-card-meta">
-            <Tag :value="t.todo_type" severity="info" />
-          </div>
-          <div v-if="t.notes" class="todo-card-notes" v-html="marked(t.notes)" />
-          <div class="todo-card-actions">
-            <Button icon="pi pi-trash" size="small" severity="danger" text @click="openDeleteFromCard(t)" />
-            <div class="todo-card-actions-right">
-              <Button label="Edit" size="small" severity="info" outlined @click="openEdit(t)" />
-              <Button label="Mark completed" size="small" severity="success" class="mark-completed-btn" @click="openComplete(t)" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section v-if="dueThisWeek.length" class="todo-section">
-      <h3 class="section-title week">This Week</h3>
-      <div class="todo-scroll">
-        <div v-for="t in dueThisWeek" :key="t.id" class="todo-card">
-          <div class="todo-card-top">
-            <div class="todo-card-title">{{ t.title }}</div>
-            <div class="todo-card-due-row">
-              <span class="todo-card-due-badge">{{ formatDueDate(t.due_date) }}</span>
-              <Button icon="pi pi-calendar" size="small" text @click="openDateChange(t)" />
-            </div>
-          </div>
-          <div v-if="t.client" class="todo-card-client"><i class="pi pi-user" /> {{ t.client.first_name }} {{ t.client.last_name }}</div>
-          <div class="todo-card-meta">
-            <Tag :value="t.todo_type" severity="info" />
-          </div>
-          <div v-if="t.notes" class="todo-card-notes" v-html="marked(t.notes)" />
-          <div class="todo-card-actions">
-            <Button icon="pi pi-trash" size="small" severity="danger" text @click="openDeleteFromCard(t)" />
-            <div class="todo-card-actions-right">
-              <Button label="Edit" size="small" severity="info" outlined @click="openEdit(t)" />
-              <Button label="Mark completed" size="small" severity="success" class="mark-completed-btn" @click="openComplete(t)" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <p v-if="!overdue.length && !dueToday.length && !dueTomorrow.length && !dueThisWeek.length && todos.length === 0" class="empty-text">
-      No todos.
-    </p>
-
-    <!-- Create Todo Dialog -->
-    <Dialog
-      v-model:visible="showCreateDialog"
-      header="Add Todo"
-      modal
-      :style="{ width: '500px' }"
-    >
-      <div class="edit-form">
-        <div class="form-row">
-          <label>Title *</label>
-          <InputText v-model="createForm.title" />
-        </div>
-        <div class="form-row">
-          <label>Todo Type *</label>
-          <Select
-            v-model="createForm.todo_type"
-            :options="todoTypeOptions"
-            placeholder="Select todo type"
-          />
-        </div>
-        <div class="form-row">
-          <label>Due Date *</label>
-          <DatePicker v-model="createForm.due_date" dateFormat="mm/dd/yy" />
-        </div>
-        <div class="form-row">
-          <label>Client</label>
-          <Select
-            v-model="createForm.client_id"
-            :options="clientOptions"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Select a client (optional)"
-            filter
-            showClear
-          />
-        </div>
-        <MarkdownEditor ref="createNotesEditor" v-model="createForm.notes" />
-      </div>
-      <template #footer>
-        <CreateEditFooter saveLabel="Create Todo" :loading="creating" :disabled="!canCreate" @cancel="showCreateDialog = false" @save="handleCreate" />
-      </template>
-    </Dialog>
-
-    <!-- Edit Todo Dialog -->
-    <Dialog
-      v-model:visible="showEditDialog"
-      header="Edit Todo"
-      modal
-      :style="{ width: '500px' }"
-    >
-      <div v-if="editForm" class="edit-form">
-        <div class="form-row">
-          <label>Title</label>
-          <InputText v-model="editForm.title" />
-        </div>
-        <div class="form-row">
-          <label>Due Date</label>
-          <DatePicker v-model="editDueDate" dateFormat="mm/dd/yy" />
-        </div>
-        <div class="form-row">
-          <label>Client</label>
-          <Select
-            v-model="editForm.client_id"
-            :options="clientOptions"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Select a client (optional)"
-            filter
-            showClear
-          />
-        </div>
-        <MarkdownEditor ref="editNotesEditor" v-model="editForm.notes" />
-      </div>
-      <template #footer>
-        <CreateEditFooter :loading="saving" showDelete @cancel="showEditDialog = false" @save="handleEdit" @delete="showDeleteDialog = true" />
-      </template>
-    </Dialog>
-
-    <!-- Delete Confirmation Dialog -->
-    <Dialog
-      v-model:visible="showDeleteDialog"
-      header="Delete Todo"
-      modal
-      :style="{ width: '400px' }"
-    >
-      <p>Are you sure you want to delete this todo? This cannot be undone.</p>
-      <template #footer>
-        <Button label="Cancel" severity="secondary" text @click="showDeleteDialog = false" />
-        <Button label="Delete" severity="danger" :loading="deleting" @click="handleDelete" />
-      </template>
-    </Dialog>
+    <TodosUpcoming v-if="activeTab === 'upcoming'" @complete="openComplete" @change-date="openDateChange" />
+    <TodosByClient v-else @complete="openComplete" @change-date="openDateChange" />
 
     <!-- Mark Complete Confirmation Dialog -->
     <Dialog
@@ -262,36 +64,18 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import Tag from 'primevue/tag'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import DatePicker from 'primevue/datepicker'
-import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
-import { marked } from 'marked'
-import MarkdownEditor from '@/components/MarkdownEditor.vue'
-import CreateEditFooter from '@/components/CreateEditFooter.vue'
-import { TodosService, TodoType } from '@/api'
+import TodosUpcoming from '@/components/TodosUpcoming.vue'
+import TodosByClient from '@/components/TodosByClient.vue'
+import { TodosService } from '@/api'
 import type { TodoResponse } from '@/api'
 import { requestWrapper } from '@/api/client'
-import { useClientStore } from '@/stores/clients'
 import { useTodoStore } from '@/stores/todos'
 
-marked.setOptions({ breaks: true })
-
-const createNotesEditor = ref<InstanceType<typeof MarkdownEditor> | null>(null)
-const editNotesEditor = ref<InstanceType<typeof MarkdownEditor> | null>(null)
-const { confirmedClients } = useClientStore()
-const { todos, overdue, dueToday, dueTomorrow, dueThisWeek, loadTodos } = useTodoStore()
-
-const clientOptions = computed(() =>
-  confirmedClients.value.map((c) => ({
-    label: `${c.first_name} ${c.last_name}`,
-    value: c.id,
-  })),
-)
-
-const todoTypeOptions = Object.values(TodoType)
+const activeTab = ref<'upcoming' | 'by-client'>('upcoming')
+const { loadTodos } = useTodoStore()
 
 function formatDueDate(dateStr: string): string {
   const [, m, d] = dateStr.split('-')
@@ -300,115 +84,6 @@ function formatDueDate(dateStr: string): string {
 
 function toDateStr(date: Date): string {
   return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0')
-}
-
-// --- Create Todo ---
-
-const showCreateDialog = ref(false)
-const creating = ref(false)
-const createForm = ref({
-  title: '',
-  todo_type: null as TodoType | null,
-  due_date: null as Date | null,
-  client_id: null as number | null,
-  notes: '',
-})
-
-const canCreate = computed(() =>
-  !!createForm.value.title.trim() && !!createForm.value.todo_type && !!createForm.value.due_date,
-)
-
-function openCreate() {
-  createNotesEditor.value?.resetPreview()
-  createForm.value = {
-    title: '',
-    todo_type: null,
-    due_date: null,
-    client_id: null,
-    notes: '',
-  }
-  showCreateDialog.value = true
-}
-
-async function handleCreate() {
-  if (!canCreate.value || !createForm.value.due_date || !createForm.value.todo_type) return
-  creating.value = true
-  try {
-    await requestWrapper(
-      TodosService.createTodo({
-        title: createForm.value.title.trim(),
-        todo_type: createForm.value.todo_type,
-        due_date: toDateStr(createForm.value.due_date),
-        client_id: createForm.value.client_id || undefined,
-        notes: createForm.value.notes.trim() || undefined,
-      }),
-    )
-    showCreateDialog.value = false
-    await loadTodos()
-  } finally {
-    creating.value = false
-  }
-}
-
-// --- Edit Todo ---
-
-const showEditDialog = ref(false)
-const showDeleteDialog = ref(false)
-const saving = ref(false)
-const deleting = ref(false)
-const editingTodoId = ref<number | null>(null)
-const editForm = ref<{ title: string; notes: string; client_id: number | null; due_date: string } | null>(null)
-const editDueDate = ref<Date | null>(null)
-
-function openEdit(todo: TodoResponse) {
-  editNotesEditor.value?.resetPreview()
-  editingTodoId.value = todo.id
-  editForm.value = {
-    title: todo.title,
-    notes: todo.notes ?? '',
-    client_id: todo.client_id,
-    due_date: todo.due_date,
-  }
-  const [y, m, d] = todo.due_date.split('-').map(Number)
-  editDueDate.value = new Date(y!, m! - 1, d)
-  showEditDialog.value = true
-}
-
-async function handleEdit() {
-  if (!editingTodoId.value || !editForm.value) return
-  saving.value = true
-  try {
-    await requestWrapper(
-      TodosService.updateTodo(editingTodoId.value, {
-        title: editForm.value.title.trim() || undefined,
-        notes: editForm.value.notes.trim() || undefined,
-        client_id: editForm.value.client_id,
-        due_date: editDueDate.value ? toDateStr(editDueDate.value) : undefined,
-      }),
-    )
-    showEditDialog.value = false
-    await loadTodos()
-  } finally {
-    saving.value = false
-  }
-}
-
-function openDeleteFromCard(todo: TodoResponse) {
-  editingTodoId.value = todo.id
-  showDeleteDialog.value = true
-}
-
-async function handleDelete() {
-  if (!editingTodoId.value) return
-  deleting.value = true
-  try {
-    await requestWrapper(TodosService.deleteTodo(editingTodoId.value))
-    showDeleteDialog.value = false
-    if (showEditDialog.value) showEditDialog.value = false
-    await loadTodos()
-  } finally {
-    deleting.value = false
-  }
 }
 
 // --- Mark Complete ---
@@ -470,8 +145,6 @@ async function handleChangeDueDate() {
     changingDate.value = false
   }
 }
-
-
 </script>
 
 <style scoped>
@@ -482,7 +155,7 @@ async function handleChangeDueDate() {
 .todos-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
@@ -490,161 +163,36 @@ async function handleChangeDueDate() {
   margin: 0;
 }
 
-.edit-form {
+.tab-bar {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.form-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.form-row label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--p-surface-600);
-}
-
-.form-row :deep(input),
-.form-row :deep(.p-select),
-.form-row :deep(textarea),
-.form-row :deep(.p-datepicker) {
-  width: 100%;
-}
-
-.todo-section {
-  margin-bottom: 1.5rem;
-}
-
-.section-title {
-  margin: 0 0 0.75rem;
-  font-size: 1rem;
-}
-
-.section-title.overdue {
-  color: var(--p-red-500);
-}
-
-.section-title.today {
-  color: var(--p-primary-color);
-}
-
-.todo-scroll {
-  display: flex;
-  gap: 0.75rem;
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
-}
-
-.todo-card {
-  min-width: 260px;
-  width: 300px;
-  flex-shrink: 0;
-  padding: 0.75rem 1rem;
-  background: white;
+  gap: 0;
   border: 1px solid var(--p-surface-200);
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
-.todo-card.overdue {
-  border-color: var(--p-red-200);
-  background: var(--p-red-50);
-}
-
-.todo-card.today {
-  border-color: var(--p-primary-200);
-  background: var(--p-primary-50);
-}
-
-.todo-card-title {
-  font-weight: 600;
-  font-size: 0.9rem;
-  margin-bottom: 0.375rem;
-}
-
-.todo-card-client {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-size: 0.8rem;
+.tab-btn {
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: none;
+  background: white;
   color: var(--p-surface-600);
-  margin-bottom: 0.375rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
 }
 
-.todo-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.tab-btn:not(:last-child) {
+  border-right: 1px solid var(--p-surface-200);
 }
 
-.todo-card-notes {
-  margin: 0.5rem 0 0;
-  font-size: 0.8rem;
-  color: var(--p-surface-600);
-}
-
-.todo-card-notes :deep(p) {
-  margin: 0 0 0.5rem;
-}
-
-.todo-card-notes :deep(p:last-child) {
-  margin-bottom: 0;
-}
-
-.todo-card-notes :deep(ul),
-.todo-card-notes :deep(ol) {
-  margin: 0 0 0.5rem;
-  padding-left: 1.25rem;
-}
-
-.todo-card-notes :deep(code) {
-  background: var(--p-surface-100);
-  padding: 0.1rem 0.3rem;
-  border-radius: 3px;
-  font-size: 0.75rem;
-}
-
-.todo-card-due-row {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  flex-shrink: 0;
-}
-
-.todo-card-due-badge {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  background: #3b82f6;
+.tab-btn.active {
+  background: var(--p-primary-color);
   color: white;
-  font-weight: 600;
-  font-size: 0.75rem;
 }
 
-.todo-card-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.todo-card-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: auto;
-  padding-top: 0.5rem;
-}
-
-.todo-card-actions-right {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.tab-btn:hover:not(.active) {
+  background: var(--p-surface-50);
 }
 
 .date-change-form {
@@ -659,21 +207,4 @@ async function handleChangeDueDate() {
   font-weight: 600;
   font-size: 0.9rem;
 }
-
-.empty-text {
-  color: var(--p-surface-400);
-  font-style: italic;
-}
-
-.mark-completed-btn :deep(.p-button) ,
-.mark-completed-btn {
-  background: #16a34a;
-  border-color: #16a34a;
-}
-
-.mark-completed-btn:hover {
-  background: #15803d;
-  border-color: #15803d;
-}
-
 </style>

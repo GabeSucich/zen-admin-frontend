@@ -1,14 +1,14 @@
 <template>
   <div class="calendar-events-page">
-    <section v-if="suggestions.length" class="suggestions-section">
+    <section v-if="displayCards.length" class="suggestions-section">
       <h2>Events from your Calendar</h2>
       <div class="suggestions-scroll">
         <div
-          v-for="s in suggestions"
+          v-for="s in displayCards"
           :key="s.id"
           class="suggestion-card"
-          :class="{ selected: selected?.id === s.id }"
-          @click="selectSuggestion(s)"
+          :class="{ selected: selected?.id === s.id, confirmed: confirmedSuggestion?.id === s.id }"
+          @click="handleCardClick(s)"
         >
           <div class="card-title">{{ s.title }}</div>
           <span
@@ -17,6 +17,9 @@
             :style="{ backgroundColor: meetingTypeColor(s.meeting_type) }"
           >{{ s.meeting_type }}</span>
           <div class="card-time">{{ formatDateTime(s.start_time) }}</div>
+          <span v-if="confirmedSuggestion?.id === s.id" class="card-confirmed-badge">
+            <i class="pi pi-check" /> Confirmed
+          </span>
         </div>
       </div>
     </section>
@@ -40,7 +43,7 @@
             <p class="detail-description">{{ selected.description }}</p>
           </div>
 
-          <div v-if="selected.todos.length" class="detail-row">
+          <div v-if="!isAddTodoMode && selected.todos.length" class="detail-row">
             <span class="detail-label">Todos</span>
             <ul class="todo-list">
               <li v-for="todo in selected.todos" :key="todo.id">
@@ -52,8 +55,8 @@
         </div>
       </div>
 
-      <!-- Right: Confirmation Panel -->
-      <div class="detail-panel">
+      <!-- Right: Confirmation Panel (unconfirmed mode) -->
+      <div v-if="!isAddTodoMode" class="detail-panel">
         <!-- Meeting Type -->
         <div class="confirm-section">
           <span class="detail-label">Meeting Type</span>
@@ -137,15 +140,25 @@
               Select the correct client below. You may need to create the client in the
               <router-link to="/clients">Clients</router-link> tab.
             </p>
-            <Select
-              v-model="selectedClientId"
-              :options="clientOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Select a client"
-              filter
-              class="client-select"
-            />
+            <div class="client-select-row">
+              <Select
+                v-model="selectedClientId"
+                :options="clientOptions"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select a client"
+                filter
+                class="client-select"
+              />
+              <Button
+                v-if="selected.client"
+                label="Reset"
+                size="small"
+                severity="secondary"
+                text
+                @click="resetClient"
+              />
+            </div>
           </template>
         </div>
 
@@ -165,7 +178,49 @@
           />
         </div>
       </div>
+
+      <!-- Right: Add Todo Panel (confirmed mode) -->
+      <div v-else class="detail-panel">
+        <div class="add-todo-header">
+          <div>
+            <span
+              class="meeting-type-banner"
+              :style="{ backgroundColor: meetingTypeColor(confirmedSuggestion!.meeting_type!) }"
+            >
+              {{ confirmedSuggestion!.meeting_type }}
+            </span>
+            <p class="confirmed-client-name">
+              <i class="pi pi-user" /> {{ confirmedSuggestion!.client!.first_name }} {{ confirmedSuggestion!.client!.last_name }}
+            </p>
+          </div>
+          <div class="add-todo-buttons">
+            <Button label="Add Todo" icon="pi pi-plus" size="small" @click="todoFormDialog?.openCreate()" />
+            <Button label="Done" size="small" severity="secondary" @click="requestDone()" />
+          </div>
+        </div>
+
+        <div v-if="loadingTodos" class="loading-todos">
+          <i class="pi pi-spin pi-spinner" /> Refreshing todos...
+        </div>
+        <div v-else-if="confirmedTodos.length" class="confirmed-todos">
+          <TodoCard
+            v-for="t in confirmedTodos"
+            :key="t.id"
+            :todo="t"
+            @edit="todoFormDialog?.openEdit($event)"
+            @delete="todoFormDialog?.openDeleteFromCard($event)"
+          />
+        </div>
+        <p v-else class="helper-text">No todos yet. Click "Add Todo" to create one.</p>
+      </div>
     </div>
+
+    <TodoFormDialog
+      ref="todoFormDialog"
+      :fixedClient="confirmedSuggestion?.client ?? null"
+      @saved="handleTodoSaved"
+      @deleted="handleTodoSaved"
+    />
 
     <!-- Ignore Dialog -->
     <Dialog
@@ -180,27 +235,46 @@
         <Button label="Ignore" severity="danger" :loading="ignoring" @click="handleIgnore" />
       </template>
     </Dialog>
+
+    <!-- Done Confirmation Dialog -->
+    <Dialog
+      v-model:visible="showDoneDialog"
+      header="Done adding appointment todos?"
+      modal
+      :style="{ width: '400px' }"
+    >
+      <p>Are you done adding todos for this client appointment?</p>
+      <template #footer>
+        <Button label="Cancel" severity="secondary" text @click="cancelDone" />
+        <Button label="Yes" @click="handleDoneConfirm" />
+      </template>
+    </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import Tag from 'primevue/tag'
 import Button from 'primevue/button'
 import Select from 'primevue/select'
 import Dialog from 'primevue/dialog'
+import TodoCard from '@/components/TodoCard.vue'
+import TodoFormDialog from '@/components/TodoFormDialog.vue'
 import { CalendarSuggestionsService, MeetingType } from '@/api'
-import type { CalendarEventClientSuggestionResponse } from '@/api'
+import type { CalendarEventClientSuggestionResponse, TodoResponse } from '@/api'
 import { requestWrapper } from '@/api/client'
 import { useSuggestionsStore } from '@/stores/suggestions'
 import { useMeetingTypesStore } from '@/stores/meetingTypes'
 import { useClientStore } from '@/stores/clients'
 import { useTodoStore } from '@/stores/todos'
+import { meetingTypeColor } from '@/utils/meetingTypeColors'
 
+const router = useRouter()
 const { suggestions, loadSuggestions } = useSuggestionsStore()
 const { meetingTypes } = useMeetingTypesStore()
 const { confirmedClients: rawConfirmedClients, loadClients } = useClientStore()
-const { loadTodos } = useTodoStore()
+const { todos, loadTodos } = useTodoStore()
 
 const selected = ref<CalendarEventClientSuggestionResponse | null>(null)
 const selectedMeetingType = ref<MeetingType | null>(null)
@@ -210,6 +284,24 @@ const changingClient = ref(false)
 const confirming = ref(false)
 const showIgnoreDialog = ref(false)
 const ignoring = ref(false)
+
+// --- Add-todo mode state ---
+const confirmedSuggestion = ref<CalendarEventClientSuggestionResponse | null>(null)
+const confirmedTodos = ref<TodoResponse[]>([])
+const pendingSuggestion = ref<CalendarEventClientSuggestionResponse | null>(null)
+const showDoneDialog = ref(false)
+const pendingRoute = ref<string | null>(null)
+const loadingTodos = ref(false)
+const todoFormDialog = ref<InstanceType<typeof TodoFormDialog> | null>(null)
+
+const isAddTodoMode = computed(() => !!confirmedSuggestion.value)
+
+const displayCards = computed(() => {
+  if (confirmedSuggestion.value) {
+    return [confirmedSuggestion.value, ...suggestions.value]
+  }
+  return suggestions.value
+})
 
 const meetingTypeOptions = computed(() =>
   meetingTypes.value.map((mt) => mt.meeting_type),
@@ -230,6 +322,23 @@ const selectedTemplateCount = computed(() => {
 
 const canConfirm = computed(() => !!selectedMeetingType.value && !!selectedClientId.value)
 
+function handleCardClick(s: CalendarEventClientSuggestionResponse) {
+  if (isAddTodoMode.value) {
+    if (s.id === confirmedSuggestion.value!.id) return
+    pendingSuggestion.value = s
+    showDoneDialog.value = true
+    return
+  }
+  selectSuggestion(s)
+}
+
+function resetClient() {
+  if (selected.value?.client) {
+    selectedClientId.value = selected.value.client.id
+    changingClient.value = false
+  }
+}
+
 function selectSuggestion(s: CalendarEventClientSuggestionResponse) {
   selected.value = s
   selectedMeetingType.value = s.meeting_type ?? null
@@ -237,8 +346,6 @@ function selectSuggestion(s: CalendarEventClientSuggestionResponse) {
   changingMeetingType.value = false
   changingClient.value = false
 }
-
-import { meetingTypeColor } from '@/utils/meetingTypeColors'
 
 async function handleConfirm() {
   if (!selected.value || !selectedMeetingType.value || !selectedClientId.value) return
@@ -248,7 +355,7 @@ async function handleConfirm() {
       selectedClientId.value !== selected.value.client?.id
         ? selectedClientId.value
         : null
-    await requestWrapper(
+    const result = await requestWrapper(
       CalendarSuggestionsService.confirmSuggestion(
         selected.value.id,
         {
@@ -257,13 +364,55 @@ async function handleConfirm() {
         },
       ),
     )
+    // Enter add-todo mode
+    confirmedSuggestion.value = result
+    confirmedTodos.value = []
+    selected.value = result
     await loadSuggestions()
     loadClients()
-    loadTodos()
-    selectFirstSuggestion()
+    loadingTodos.value = true
+    await loadTodos()
+    loadingTodos.value = false
+    confirmedTodos.value = todos.value.filter((t) => t.client_id === result.client_id)
   } finally {
     confirming.value = false
   }
+}
+
+async function handleTodoSaved() {
+  await loadTodos()
+  if (confirmedSuggestion.value) {
+    const clientId = confirmedSuggestion.value.client_id
+    confirmedTodos.value = todos.value.filter((t) => t.client_id === clientId)
+  }
+}
+
+function requestDone(pending?: CalendarEventClientSuggestionResponse) {
+  pendingSuggestion.value = pending ?? null
+  showDoneDialog.value = true
+}
+
+function handleDoneConfirm() {
+  showDoneDialog.value = false
+  const pending = pendingSuggestion.value
+  const route = pendingRoute.value
+  pendingSuggestion.value = null
+  pendingRoute.value = null
+  confirmedSuggestion.value = null
+  confirmedTodos.value = []
+  if (route) {
+    router.push(route)
+  } else if (pending) {
+    selectSuggestion(pending)
+  } else {
+    selectFirstSuggestion()
+  }
+}
+
+function cancelDone() {
+  showDoneDialog.value = false
+  pendingSuggestion.value = null
+  pendingRoute.value = null
 }
 
 async function handleIgnore() {
@@ -298,6 +447,14 @@ function formatDateTime(iso: string): string {
     minute: '2-digit',
   })
 }
+
+onBeforeRouteLeave((to) => {
+  if (isAddTodoMode.value) {
+    pendingRoute.value = to.fullPath
+    showDoneDialog.value = true
+    return false
+  }
+})
 </script>
 
 <style scoped>
@@ -337,6 +494,16 @@ function formatDateTime(iso: string): string {
   background: var(--p-surface-50);
 }
 
+.suggestion-card.confirmed {
+  border-color: #16a34a;
+  background: #f0fdf4;
+}
+
+.suggestion-card.confirmed.selected {
+  border-color: #16a34a;
+  background: #f0fdf4;
+}
+
 .card-title {
   font-weight: 600;
   font-size: 0.875rem;
@@ -356,6 +523,16 @@ function formatDateTime(iso: string): string {
 .card-time {
   font-size: 0.8rem;
   color: var(--p-surface-500);
+}
+
+.card-confirmed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #16a34a;
 }
 
 .detail-columns {
@@ -549,8 +726,15 @@ function formatDateTime(iso: string): string {
   gap: 0.25rem;
 }
 
+.client-select-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .client-select {
   width: 100%;
+  flex: 1;
 }
 
 .action-buttons {
@@ -561,5 +745,50 @@ function formatDateTime(iso: string): string {
 
 .action-buttons > * {
   flex: 1;
+}
+
+/* Add-todo mode */
+.add-todo-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.confirmed-client-name {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--p-surface-700);
+}
+
+.add-todo-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.loading-todos {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--p-surface-500);
+  padding: 1rem 0;
+}
+
+.confirmed-todos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.confirmed-todos :deep(.todo-card) {
+  width: 100%;
+  min-width: 0;
 }
 </style>
