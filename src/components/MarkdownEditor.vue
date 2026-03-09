@@ -8,22 +8,23 @@
       </div>
     </div>
     <div v-if="previewing" class="markdown-preview" v-html="rendered" />
-    <Textarea v-else :modelValue="modelValue" @update:modelValue="$emit('update:modelValue', $event)" :rows="rows" autoResize />
+    <Textarea v-else :modelValue="modelValue ?? ''" @update:modelValue="$emit('update:modelValue', $event)" :rows="rows" autoResize />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import Textarea from 'primevue/textarea'
 import { marked } from 'marked'
 
 marked.setOptions({ breaks: true })
 
 const props = withDefaults(defineProps<{
-  modelValue: string
+  modelValue?: string | null
   label?: string
   rows?: number
 }>(), {
+  modelValue: '',
   label: 'Notes',
   rows: 3,
 })
