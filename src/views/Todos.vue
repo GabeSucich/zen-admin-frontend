@@ -377,7 +377,7 @@ function openEdit(todo: TodoResponse) {
     due_date: todo.due_date,
   }
   const [y, m, d] = todo.due_date.split('-').map(Number)
-  editDueDate.value = new Date(y, m - 1, d)
+  editDueDate.value = new Date(y!, m! - 1, d)
   showEditDialog.value = true
 }
 
@@ -457,7 +457,7 @@ const newDueDateChanged = computed(() => {
 function openDateChange(todo: TodoResponse) {
   dateChangeTodo.value = todo
   const [y, m, d] = todo.due_date.split('-').map(Number)
-  newDueDate.value = new Date(y, m - 1, d)
+  newDueDate.value = new Date(y!, m! - 1, d)
   showDateDialog.value = true
 }
 

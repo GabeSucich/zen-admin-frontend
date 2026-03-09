@@ -279,7 +279,7 @@ async function handleIgnore() {
 
 function selectFirstSuggestion() {
   if (suggestions.value.length) {
-    selectSuggestion(suggestions.value[0])
+    selectSuggestion(suggestions.value[0]!)
   } else {
     selected.value = null
   }
