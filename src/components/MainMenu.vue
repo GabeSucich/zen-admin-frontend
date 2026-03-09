@@ -1,0 +1,69 @@
+<template>
+  <Menubar :model="items">
+    <template #start>
+      <img :src="logo" alt="Zen Admin" class="menu-logo" />
+    </template>
+    <template #item="{ item, props }">
+      <a v-bind="props.action">
+        <span :class="item.icon" />
+        <span>{{ item.label }}</span>
+        <Badge
+          v-if="item.badge"
+          :value="item.badge"
+          severity="info"
+          class="menu-badge"
+        />
+      </a>
+    </template>
+  </Menubar>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import Menubar from 'primevue/menubar'
+import Badge from 'primevue/badge'
+import logo from '@/assets/images/zenlogo_nobackground_resized_md.png'
+import { useClientStore } from '@/stores/clients'
+import { useSuggestionsStore } from '@/stores/suggestions'
+import { useTodoStore } from '@/stores/todos'
+
+const router = useRouter()
+const { confirmedClientsWithIncompleteData } = useClientStore()
+const { suggestions } = useSuggestionsStore()
+const { upcomingCount } = useTodoStore()
+
+const items = computed(() => [
+  {
+    label: 'Calendar Events',
+    icon: 'pi pi-calendar',
+    command: () => router.push('/calendar-events'),
+    badge: suggestions.value.length || null,
+  },
+  {
+    label: 'Todos',
+    icon: 'pi pi-check-square',
+    command: () => router.push('/todos'),
+    badge: upcomingCount.value || null,
+  },
+  {
+    label: 'Clients',
+    icon: 'pi pi-users',
+    command: () => router.push('/clients'),
+    badge: confirmedClientsWithIncompleteData.value.length || null,
+  },
+  { label: 'Templates', icon: 'pi pi-file-edit', command: () => router.push('/templates') },
+])
+</script>
+
+<style scoped>
+.menu-logo {
+  height: 32px;
+  margin-right: 0.5rem;
+}
+
+.menu-badge {
+  margin-left: 0.5rem;
+  border-radius: 4px;
+}
+</style>
