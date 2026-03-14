@@ -196,6 +196,7 @@ function openCreate() {
 
 async function handleCreate() {
   if (!selectedType.value || !createForm.value.todo_type) return
+  createNotesEditor.value?.syncFromDom()
   saving.value = true
   try {
     await requestWrapper(
@@ -236,6 +237,7 @@ function openEdit(template: MeetingTypeTodoTemplateResponse) {
 
 async function handleEdit() {
   if (!editingTemplateId.value || !editForm.value) return
+  editNotesEditor.value?.syncFromDom()
   saving.value = true
   try {
     await requestWrapper(

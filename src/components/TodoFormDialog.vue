@@ -116,6 +116,7 @@ import { useClientStore } from '@/stores/clients'
 
 const props = defineProps<{
   fixedClient?: ClientResponse | null
+  calEventClientSuggestionId?: number | null
 }>()
 
 const emit = defineEmits<{
@@ -170,6 +171,7 @@ function openCreate() {
 
 async function handleCreate() {
   if (!canCreate.value || !createForm.value.due_date || !createForm.value.todo_type) return
+  createNotesEditor.value?.syncFromDom()
   creating.value = true
   try {
     const clientId = props.fixedClient?.id ?? createForm.value.client_id
@@ -179,6 +181,7 @@ async function handleCreate() {
         todo_type: createForm.value.todo_type,
         due_date: toDateStr(createForm.value.due_date),
         client_id: clientId || undefined,
+        cal_event_client_suggestion_id: props.calEventClientSuggestionId ?? undefined,
         notes: createForm.value.notes.trim() || undefined,
       }),
     )
@@ -215,13 +218,14 @@ function openEdit(todo: TodoResponse) {
 
 async function handleEdit() {
   if (!editingTodoId.value || !editForm.value) return
+  editNotesEditor.value?.syncFromDom()
   saving.value = true
   try {
     const clientId = props.fixedClient?.id ?? editForm.value.client_id
     await requestWrapper(
       TodosService.updateTodo(editingTodoId.value, {
         title: editForm.value.title.trim() || undefined,
-        notes: editForm.value.notes.trim() || undefined,
+        notes: editForm.value.notes.trim() || null,
         client_id: clientId,
         due_date: editDueDate.value ? toDateStr(editDueDate.value) : undefined,
       }),

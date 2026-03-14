@@ -218,6 +218,7 @@
     <TodoFormDialog
       ref="todoFormDialog"
       :fixedClient="confirmedSuggestion?.client ?? null"
+      :calEventClientSuggestionId="confirmedSuggestion?.id ?? null"
       @saved="handleTodoSaved"
       @deleted="handleTodoSaved"
     />
@@ -373,7 +374,7 @@ async function handleConfirm() {
     loadingTodos.value = true
     await loadTodos()
     loadingTodos.value = false
-    confirmedTodos.value = todos.value.filter((t) => t.client_id === result.client_id)
+    confirmedTodos.value = todos.value.filter((t) => t.cal_event_client_suggestion_id === result.id)
   } finally {
     confirming.value = false
   }
@@ -382,8 +383,7 @@ async function handleConfirm() {
 async function handleTodoSaved() {
   await loadTodos()
   if (confirmedSuggestion.value) {
-    const clientId = confirmedSuggestion.value.client_id
-    confirmedTodos.value = todos.value.filter((t) => t.client_id === clientId)
+    confirmedTodos.value = todos.value.filter((t) => t.cal_event_client_suggestion_id === confirmedSuggestion.value!.id)
   }
 }
 

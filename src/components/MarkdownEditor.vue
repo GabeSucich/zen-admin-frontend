@@ -8,7 +8,7 @@
       </div>
     </div>
     <div v-if="previewing" class="markdown-preview" v-html="rendered" />
-    <Textarea v-else :modelValue="modelValue ?? ''" @update:modelValue="$emit('update:modelValue', $event)" :rows="rows" autoResize />
+    <Textarea ref="textareaRef" v-else :modelValue="modelValue ?? ''" @update:modelValue="$emit('update:modelValue', $event)" :rows="rows" autoResize />
   </div>
 </template>
 
@@ -29,15 +29,23 @@ const props = withDefaults(defineProps<{
   rows: 3,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
 
+const textareaRef = ref<any>(null)
 const previewing = ref(false)
 
 const rendered = computed(() => marked(props.modelValue || ''))
 
-defineExpose({ resetPreview: () => { previewing.value = false } })
+function syncFromDom() {
+  const el = textareaRef.value?.$el as HTMLTextAreaElement | undefined
+  if (el && el.value !== props.modelValue) {
+    emit('update:modelValue', el.value)
+  }
+}
+
+defineExpose({ resetPreview: () => { previewing.value = false }, syncFromDom })
 </script>
 
 <style scoped>
