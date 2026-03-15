@@ -105,21 +105,21 @@
         <!-- Client -->
         <div class="confirm-section">
           <span class="detail-label">Suggested Client</span>
-          <div v-if="selected.client && !changingClient" class="client-card">
+          <div v-if="displayClient && !changingClient" class="client-card">
             <div class="client-card-header">
               <div class="client-card-info">
                 <div class="client-name-row">
-                  <span class="client-name">{{ selected.client.first_name }} {{ selected.client.last_name }}</span>
+                  <span class="client-name">{{ displayClient.first_name }} {{ displayClient.last_name }}</span>
                   <Tag
-                    :value="selected.client.user_confirmed ? 'Existing' : 'New'"
-                    :severity="selected.client.user_confirmed ? 'info' : 'success'"
+                    :value="displayClient.user_confirmed ? 'Existing' : 'New'"
+                    :severity="displayClient.user_confirmed ? 'info' : 'success'"
                     class="client-status-tag"
                   />
                 </div>
                 <div class="client-details">
-                  <span v-if="selected.client.email"><i class="pi pi-envelope" /> {{ selected.client.email }}</span>
-                  <span v-if="selected.client.phone"><i class="pi pi-phone" /> {{ selected.client.phone }}</span>
-                  <span v-if="selected.client.location"><i class="pi pi-map-marker" /> {{ selected.client.location }}</span>
+                  <span v-if="displayClient.email"><i class="pi pi-envelope" /> {{ displayClient.email }}</span>
+                  <span v-if="displayClient.phone"><i class="pi pi-phone" /> {{ displayClient.phone }}</span>
+                  <span v-if="displayClient.location"><i class="pi pi-map-marker" /> {{ displayClient.location }}</span>
                 </div>
               </div>
               <Button
@@ -132,7 +132,7 @@
             </div>
           </div>
           <template v-else>
-            <p v-if="!selected.client" class="helper-text">
+            <p v-if="!displayClient" class="helper-text">
               No client was matched to this meeting. Select an existing client, or create one in the
               <router-link to="/clients">Clients</router-link> tab and come back here.
             </p>
@@ -263,7 +263,7 @@ import Dialog from 'primevue/dialog'
 import TodoCard from '@/components/TodoCard.vue'
 import TodoFormDialog from '@/components/TodoFormDialog.vue'
 import { CalendarSuggestionsService, MeetingType } from '@/api'
-import type { CalendarEventClientSuggestionResponse, TodoResponse } from '@/api'
+import type { CalendarEventClientSuggestionResponse, TodoResponse, ClientResponse } from '@/api'
 import { requestWrapper } from '@/api/client'
 import { useSuggestionsStore } from '@/stores/suggestions'
 import { useMeetingTypesStore } from '@/stores/meetingTypes'
@@ -285,6 +285,7 @@ const changingClient = ref(false)
 const confirming = ref(false)
 const showIgnoreDialog = ref(false)
 const ignoring = ref(false)
+const emailMatchedClient = ref<ClientResponse | null>(null)
 
 // --- Add-todo mode state ---
 const confirmedSuggestion = ref<CalendarEventClientSuggestionResponse | null>(null)
@@ -315,6 +316,10 @@ const clientOptions = computed(() =>
   })),
 )
 
+const displayClient = computed(() =>
+  emailMatchedClient.value ?? selected.value?.client ?? null,
+)
+
 const selectedTemplateCount = computed(() => {
   if (!selectedMeetingType.value) return 0
   const mt = meetingTypes.value.find((m) => m.meeting_type === selectedMeetingType.value)
@@ -334,18 +339,33 @@ function handleCardClick(s: CalendarEventClientSuggestionResponse) {
 }
 
 function resetClient() {
-  if (selected.value?.client) {
+  changingClient.value = false
+  if (emailMatchedClient.value) {
+    selectedClientId.value = emailMatchedClient.value.id
+  } else if (selected.value?.client) {
     selectedClientId.value = selected.value.client.id
-    changingClient.value = false
   }
 }
 
 function selectSuggestion(s: CalendarEventClientSuggestionResponse) {
   selected.value = s
   selectedMeetingType.value = s.meeting_type ?? null
-  selectedClientId.value = s.client?.id ?? null
   changingMeetingType.value = false
   changingClient.value = false
+
+  if (s.client && !s.client.user_confirmed && s.client.email) {
+    const email = s.client.email.trim().toLowerCase()
+    const match = rawConfirmedClients.value.find(
+      (c) => c.email && c.email.trim().toLowerCase() === email,
+    )
+    if (match) {
+      emailMatchedClient.value = match
+      selectedClientId.value = match.id
+      return
+    }
+  }
+  emailMatchedClient.value = null
+  selectedClientId.value = s.client?.id ?? null
 }
 
 async function handleConfirm() {
