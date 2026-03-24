@@ -20,17 +20,7 @@
         <div v-if="fixedClient" class="fixed-client">
           <i class="pi pi-user" /> {{ fixedClient.first_name }} {{ fixedClient.last_name }}
         </div>
-        <Select
-          v-else
-          v-model="createForm.client_id"
-          :options="clientOptions"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Select a client (optional)"
-          filter
-          autoFilterFocus
-          showClear
-        />
+        <ClientSelect v-else v-model="createForm.client_id" placeholder="Select a client (optional)" />
       </div>
       <MarkdownEditor ref="createNotesEditor" v-model="createForm.notes" />
     </div>
@@ -60,17 +50,7 @@
         <div v-if="fixedClient" class="fixed-client">
           <i class="pi pi-user" /> {{ fixedClient.first_name }} {{ fixedClient.last_name }}
         </div>
-        <Select
-          v-else
-          v-model="editForm.client_id"
-          :options="clientOptions"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Select a client (optional)"
-          filter
-          autoFilterFocus
-          showClear
-        />
+        <ClientSelect v-else v-model="editForm.client_id" placeholder="Select a client (optional)" />
       </div>
       <MarkdownEditor ref="editNotesEditor" v-model="editForm.notes" />
     </div>
@@ -100,14 +80,12 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import DatePicker from 'primevue/datepicker'
 import InputText from 'primevue/inputtext'
-import Select from 'primevue/select'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
+import ClientSelect from '@/components/ClientSelect.vue'
 import CreateEditFooter from '@/components/CreateEditFooter.vue'
 import { TodosService, TodoType } from '@/api'
 import type { TodoResponse, ClientResponse } from '@/api'
 import { requestWrapper } from '@/api/client'
-import { useClientStore } from '@/stores/clients'
-
 const props = defineProps<{
   fixedClient?: ClientResponse | null
   calEventClientSuggestionId?: number | null
@@ -120,14 +98,6 @@ const emit = defineEmits<{
 
 const createNotesEditor = ref<InstanceType<typeof MarkdownEditor> | null>(null)
 const editNotesEditor = ref<InstanceType<typeof MarkdownEditor> | null>(null)
-const { confirmedClients } = useClientStore()
-
-const clientOptions = computed(() =>
-  confirmedClients.value.map((c) => ({
-    label: `${c.first_name} ${c.last_name}`,
-    value: c.id,
-  })),
-)
 
 
 function toDateStr(date: Date): string {

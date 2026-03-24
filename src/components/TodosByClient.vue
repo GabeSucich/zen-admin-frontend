@@ -1,16 +1,7 @@
 <template>
   <div>
     <div class="by-client-header">
-      <Select
-        v-model="selectedClientId"
-        :options="clientOptions"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Select a client"
-        filter
-        showClear
-        class="client-select"
-      />
+      <ClientSelect v-model="selectedClientId" class="client-select" />
       <Button v-if="selectedClientId" label="Add Todo" icon="pi pi-plus" size="small" @click="todoFormDialog?.openCreate()" />
     </div>
 
@@ -64,8 +55,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import Button from 'primevue/button'
-import Select from 'primevue/select'
 import TodoCard from '@/components/TodoCard.vue'
+import ClientSelect from '@/components/ClientSelect.vue'
 import TodoFormDialog from '@/components/TodoFormDialog.vue'
 import type { TodoResponse } from '@/api'
 import { useClientStore } from '@/stores/clients'
@@ -81,13 +72,6 @@ const { confirmedClients } = useClientStore()
 const { todos, loadTodos } = useTodoStore()
 
 const selectedClientId = ref<number | null>(null)
-
-const clientOptions = computed(() =>
-  confirmedClients.value.map((c) => ({
-    label: `${c.first_name} ${c.last_name}`,
-    value: c.id,
-  })),
-)
 
 const selectedClient = computed(() => {
   if (!selectedClientId.value) return null
