@@ -28,6 +28,17 @@ export class AuthService {
         });
     }
     /**
+     * Logout
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static logout(): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/logout',
+        });
+    }
+    /**
      * Health Check
      * @returns any Successful Response
      * @throws ApiError

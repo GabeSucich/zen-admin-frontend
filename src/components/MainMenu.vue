@@ -24,6 +24,13 @@
         text
         @click="$emit('refresh')"
       />
+      <Button
+        icon="pi pi-sign-out"
+        label="Logout"
+        severity="secondary"
+        text
+        @click="$emit('logout')"
+      />
     </template>
   </Menubar>
 </template>
@@ -40,7 +47,7 @@ import { useSuggestionsStore } from '@/stores/suggestions'
 import { useTodoStore } from '@/stores/todos'
 
 defineProps<{ refreshing: boolean }>()
-defineEmits<{ refresh: [] }>()
+defineEmits<{ refresh: []; logout: [] }>()
 
 const route = useRoute()
 const router = useRouter()

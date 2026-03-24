@@ -8,9 +8,7 @@
       </div>
     </div>
     <div v-if="todo.client" class="todo-card-client"><i class="pi pi-user" /> {{ todo.client.first_name }} {{ todo.client.last_name }}</div>
-    <div class="todo-card-meta">
-      <Tag :value="todo.todo_type" severity="info" />
-    </div>
+    <hr v-if="todo.notes" class="todo-card-divider" />
     <div v-if="todo.notes" class="todo-card-notes" v-html="marked(todo.notes)" />
     <div class="todo-card-actions">
       <Button icon="pi pi-trash" size="small" severity="danger" text @click="$emit('delete', todo)" />
@@ -23,7 +21,6 @@
 </template>
 
 <script setup lang="ts">
-import Tag from 'primevue/tag'
 import Button from 'primevue/button'
 import { marked } from 'marked'
 import type { TodoResponse } from '@/api'
@@ -86,10 +83,10 @@ function formatDueDate(dateStr: string): string {
   margin-bottom: 0.375rem;
 }
 
-.todo-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.todo-card-divider {
+  border: none;
+  border-top: 1px solid var(--p-surface-200);
+  margin: 0.5rem 0 0;
 }
 
 .todo-card-notes {

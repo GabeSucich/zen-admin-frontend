@@ -1,5 +1,5 @@
 <template>
-  <MainMenu v-if="route.path !== '/login'" :refreshing="refreshing" @refresh="refreshDashboard" />
+  <MainMenu v-if="route.path !== '/login'" :refreshing="refreshing" @refresh="refreshDashboard" @logout="handleLogout" />
   <ErrorView />
   <router-view />
 </template>
@@ -36,6 +36,14 @@ async function refreshDashboard() {
   }
 }
 
+async function handleLogout() {
+  const response = await requestWrapper(AuthService.logout())
+  if (response?.success) {
+    localStorage.removeItem('token')
+    router.push('/login')
+  }
+}
+
 onMounted(async () => {
   await requestWrapper(AuthService.healthCheck())
   refreshDashboard()
@@ -45,6 +53,12 @@ watch(forbidden, (value) => {
   if (value) {
     forbidden.value = false
     router.push('/login')
+  }
+})
+
+watch(() => route.path, (to, from) => {
+  if (from === '/login' && to !== '/login') {
+    refreshDashboard()
   }
 })
 </script>

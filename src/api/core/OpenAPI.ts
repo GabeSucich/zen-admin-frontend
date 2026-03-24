@@ -23,7 +23,7 @@ export const OpenAPI: OpenAPIConfig = {
     BASE: import.meta.env.VITE_ZEN_ADMIN_API_URL || 'http://localhost:8000',
     VERSION: '0.1.0',
     WITH_CREDENTIALS: false,
-    CREDENTIALS: 'omit',
+    CREDENTIALS: 'include',
     TOKEN: async () => {
         const token = localStorage.getItem("token");
         return token || "";

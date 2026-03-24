@@ -12,14 +12,6 @@
         <InputText v-model="createForm.title" />
       </div>
       <div class="form-row">
-        <label>Todo Type *</label>
-        <Select
-          v-model="createForm.todo_type"
-          :options="todoTypeOptions"
-          placeholder="Select todo type"
-        />
-      </div>
-      <div class="form-row">
         <label>Due Date *</label>
         <DatePicker v-model="createForm.due_date" dateFormat="mm/dd/yy" />
       </div>
@@ -36,6 +28,7 @@
           optionValue="value"
           placeholder="Select a client (optional)"
           filter
+          autoFilterFocus
           showClear
         />
       </div>
@@ -75,6 +68,7 @@
           optionValue="value"
           placeholder="Select a client (optional)"
           filter
+          autoFilterFocus
           showClear
         />
       </div>
@@ -135,7 +129,6 @@ const clientOptions = computed(() =>
   })),
 )
 
-const todoTypeOptions = Object.values(TodoType)
 
 function toDateStr(date: Date): string {
   return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0')
@@ -147,21 +140,21 @@ const showCreateDialog = ref(false)
 const creating = ref(false)
 const createForm = ref({
   title: '',
-  todo_type: null as TodoType | null,
+  todo_type: TodoType.GENERAL,
   due_date: null as Date | null,
   client_id: null as number | null,
   notes: '',
 })
 
 const canCreate = computed(() =>
-  !!createForm.value.title.trim() && !!createForm.value.todo_type && !!createForm.value.due_date,
+  !!createForm.value.title.trim() && !!createForm.value.due_date,
 )
 
 function openCreate() {
   createNotesEditor.value?.resetPreview()
   createForm.value = {
     title: '',
-    todo_type: null,
+    todo_type: TodoType.GENERAL,
     due_date: null,
     client_id: props.fixedClient?.id ?? null,
     notes: '',
@@ -170,7 +163,7 @@ function openCreate() {
 }
 
 async function handleCreate() {
-  if (!canCreate.value || !createForm.value.due_date || !createForm.value.todo_type) return
+  if (!canCreate.value || !createForm.value.due_date) return
   createNotesEditor.value?.syncFromDom()
   creating.value = true
   try {
