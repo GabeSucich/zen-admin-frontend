@@ -43,7 +43,6 @@ import Badge from 'primevue/badge'
 import Button from 'primevue/button'
 import logo from '@/assets/images/zenlogo_nobackground_resized_md.png'
 // import { useClientStore } from '@/stores/clients'
-import { useSuggestionsStore } from '@/stores/suggestions'
 import { useTodoStore } from '@/stores/todos'
 
 defineProps<{ refreshing: boolean }>()
@@ -51,17 +50,14 @@ defineEmits<{ refresh: []; logout: [] }>()
 
 const route = useRoute()
 const router = useRouter()
-// const { confirmedClientsWithIncompleteData } = useClientStore()
-const { suggestions } = useSuggestionsStore()
 const { upcomingCount } = useTodoStore()
 
 const items = computed(() => [
   {
-    label: 'Calendar Events',
+    label: 'Meetings',
     icon: 'pi pi-calendar',
-    route: '/calendar-events',
-    command: () => router.push('/calendar-events'),
-    badge: suggestions.value.length || null,
+    route: '/meetings',
+    command: () => router.push('/meetings'),
   },
   {
     label: 'Todos',

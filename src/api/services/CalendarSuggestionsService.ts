@@ -9,6 +9,27 @@ import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class CalendarSuggestionsService {
     /**
+     * Get All Suggestions
+     * Fetch all CalendarEventClientSuggestions for events before the given timestamp.
+     * @param since
+     * @returns CalendarEventClientSuggestionResponse Successful Response
+     * @throws ApiError
+     */
+    public static getAllSuggestions(
+        since: string,
+    ): CancelablePromise<Array<CalendarEventClientSuggestionResponse>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/calendar-suggestions/all',
+            query: {
+                'since': since,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
      * Get Unconfirmed Suggestions
      * Fetch all unconfirmed CalendarEventClientSuggestions with client and todos.
      * @returns CalendarEventClientSuggestionResponse Successful Response

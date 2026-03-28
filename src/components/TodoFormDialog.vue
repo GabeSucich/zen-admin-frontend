@@ -218,7 +218,19 @@ async function handleDelete() {
   }
 }
 
-defineExpose({ openCreate, openEdit, openDeleteFromCard })
+function openCreateWith(defaults: { title?: string; notes?: string }) {
+  createNotesEditor.value?.resetPreview()
+  createForm.value = {
+    title: defaults.title ?? '',
+    todo_type: TodoType.GENERAL,
+    due_date: null,
+    client_id: props.fixedClient?.id ?? null,
+    notes: defaults.notes ?? '',
+  }
+  showCreateDialog.value = true
+}
+
+defineExpose({ openCreate, openCreateWith, openEdit, openDeleteFromCard })
 </script>
 
 <style scoped>
