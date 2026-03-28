@@ -2,7 +2,7 @@
   <div class="todos-panel">
     <div class="todos-header">
       <h3 class="todos-title">{{ suggestion.title }}</h3>
-      <p class="todos-subtitle">{{ formatDateTime(suggestion.start_time) }}</p>
+      <span class="todos-subtitle">{{ formatDateTime(suggestion.start_time) }}</span>
     </div>
 
     <div class="todos-toolbar">
@@ -21,36 +21,38 @@
       </div>
     </div>
 
-    <div v-if="actionItems.length" class="action-items-section">
-      <span class="todos-section-label">Suggested from Granola</span>
-      <div class="action-items-list">
-        <div v-for="(item, idx) in actionItems" :key="idx" class="action-item-card">
-          <div class="action-item-content">
-            <p class="action-item-title">{{ item.title }}</p>
-            <p v-if="item.description" class="action-item-desc">{{ item.description }}</p>
-          </div>
-          <div class="action-item-actions">
-            <Button icon="pi pi-plus" size="small" rounded text @click="createFromActionItem(item)" />
-            <Button icon="pi pi-times" size="small" rounded text severity="secondary" @click="dismissActionItem(idx)" />
+    <div class="todos-scroll-area">
+      <div v-if="actionItems.length" class="action-items-section">
+        <span class="todos-section-label">Suggested from Granola</span>
+        <div class="action-items-list" :class="{ 'two-col': wideLayout }">
+          <div v-for="(item, idx) in actionItems" :key="idx" class="action-item-card">
+            <div class="action-item-content">
+              <p class="action-item-title">{{ item.title }}</p>
+              <p v-if="item.description" class="action-item-desc">{{ item.description }}</p>
+            </div>
+            <div class="action-item-actions">
+              <Button icon="pi pi-plus" size="small" rounded text @click="createFromActionItem(item)" />
+              <Button icon="pi pi-times" size="small" rounded text severity="secondary" @click="dismissActionItem(idx)" />
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div v-if="loadingTodos" class="loading-todos">
-      <i class="pi pi-spin pi-spinner" /> Loading todos...
+      <div v-if="loadingTodos" class="loading-todos">
+        <i class="pi pi-spin pi-spinner" /> Loading todos...
+      </div>
+      <div v-else-if="todos.length" class="todos-list" :class="{ 'two-col': wideLayout }">
+        <TodoCard
+          v-for="t in todos"
+          :key="t.id"
+          :todo="t"
+          @edit="todoFormDialog?.openEdit($event)"
+          @delete="todoFormDialog?.openDeleteFromCard($event)"
+          @complete="handleComplete($event)"
+        />
+      </div>
+      <p v-else class="empty-text">No todos yet. Click "Add Todo" to create one.</p>
     </div>
-    <div v-else-if="todos.length" class="todos-list">
-      <TodoCard
-        v-for="t in todos"
-        :key="t.id"
-        :todo="t"
-        @edit="todoFormDialog?.openEdit($event)"
-        @delete="todoFormDialog?.openDeleteFromCard($event)"
-        @complete="handleComplete($event)"
-      />
-    </div>
-    <p v-else class="empty-text">No todos yet. Click "Add Todo" to create one.</p>
 
     <TodoFormDialog
       ref="todoFormDialog"
@@ -76,6 +78,7 @@ import { useTodoStore } from '@/stores/todos'
 const props = defineProps<{
   suggestion: CalendarEventClientSuggestionResponse
   meetingNotesId?: number | null
+  wideLayout?: boolean
 }>()
 
 const { todos: allTodos, loadTodos } = useTodoStore()
@@ -149,23 +152,32 @@ function formatDateTime(iso: string): string {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  min-height: 0;
+}
+
+.todos-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .todos-header {
-  border: 1px solid var(--p-surface-200);
-  border-radius: 8px;
-  padding: 1.5rem;
-  background: white;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
 }
 
 .todos-title {
-  margin: 0 0 0.25rem;
+  margin: 0;
 }
 
 .todos-subtitle {
-  margin: 0;
   color: var(--p-surface-500);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .todos-toolbar {
@@ -193,9 +205,13 @@ function formatDateTime(iso: string): string {
 }
 
 .todos-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 0.75rem;
+}
+
+.todos-list.two-col {
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .todos-list :deep(.todo-card) {
@@ -223,9 +239,13 @@ function formatDateTime(iso: string): string {
 }
 
 .action-items-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 0.5rem;
+}
+
+.action-items-list.two-col {
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .action-item-card {

@@ -1,6 +1,9 @@
 <template>
   <div class="granola-notes-panel">
-    <span class="section-label">Granola Notes</span>
+    <div class="section-header">
+      <span class="section-label">Granola Notes</span>
+      <Button label="Collapse" size="small" severity="secondary" text @click="$emit('collapse')" />
+    </div>
 
     <div v-if="loading" class="loading">
       <i class="pi pi-spin pi-spinner" /> Loading notes...
@@ -11,7 +14,7 @@
       <div v-else class="plain-content">{{ notes.notes_text }}</div>
     </template>
 
-    <template v-else>
+    <template v-else-if="!notes">
       <div v-if="importing" class="loading">
         <i class="pi pi-spin pi-spinner" /> Sit tight while we try to import Granola notes
       </div>
@@ -39,11 +42,13 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'notes-loaded': [meetingNotesId: number]
+  'collapse': []
 }>()
 
 const notes = ref<GranolaMeetingNotesResponse | null>(null)
 const loading = ref(false)
 const importing = ref(false)
+
 
 const renderedMarkdown = computed(() =>
   notes.value?.notes_markdown ? marked(notes.value.notes_markdown) : '',
@@ -87,6 +92,14 @@ watch(() => props.calendarEventId, () => loadNotes(), { immediate: true })
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .section-label {
@@ -114,6 +127,9 @@ watch(() => props.calendarEventId, () => loadNotes(), { immediate: true })
   font-size: 0.875rem;
   line-height: 1.6;
   overflow-wrap: break-word;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .markdown-content :deep(h1),

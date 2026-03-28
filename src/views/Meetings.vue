@@ -23,8 +23,11 @@
       </template>
       <template v-else>
         <div class="confirmed-columns">
-          <EventTodosPanel :suggestion="selected" :meetingNotesId="meetingNotesId" />
-          <GranolaNotesPanel :calendarEventId="selected.calendar_event_id" @notes-loaded="meetingNotesId = $event" />
+          <EventTodosPanel :suggestion="selected" :meetingNotesId="meetingNotesId" :wideLayout="granolaCollapsed" />
+          <GranolaNotesPanel v-if="!granolaCollapsed" :calendarEventId="selected.calendar_event_id" @notes-loaded="meetingNotesId = $event" @collapse="granolaCollapsed = true" />
+          <div v-else class="collapsed-granola">
+            <Button label="Expand Granola" size="small" severity="secondary" text @click="granolaCollapsed = false" />
+          </div>
         </div>
       </template>
     </div>
@@ -38,6 +41,7 @@ import EventInfoPanel from '@/components/EventInfoPanel.vue'
 import EventConfirmPanel from '@/components/EventConfirmPanel.vue'
 import EventTodosPanel from '@/components/EventTodosPanel.vue'
 import GranolaNotesPanel from '@/components/GranolaNotesPanel.vue'
+import Button from 'primevue/button'
 import { CalendarSuggestionsService } from '@/api'
 import type { CalendarEventClientSuggestionResponse } from '@/api'
 import { requestWrapper } from '@/api/client'
@@ -53,6 +57,7 @@ const selected = ref<CalendarEventClientSuggestionResponse | null>(null)
 const daysAgo = ref(3)
 const loading = ref(false)
 const meetingNotesId = ref<number | null>(null)
+const granolaCollapsed = ref(false)
 
 function sinceTimestamp(days: number): string {
   const d = new Date()
@@ -116,12 +121,15 @@ onMounted(() => fetchEvents())
 .main-content {
   flex: 1;
   min-width: 0;
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .detail-columns {
   display: flex;
   gap: 1.5rem;
+  overflow-y: auto;
 }
 
 .detail-columns > * {
@@ -132,10 +140,22 @@ onMounted(() => fetchEvents())
 .confirmed-columns {
   display: flex;
   gap: 1.5rem;
+  flex: 1;
+  min-height: 0;
 }
 
 .confirmed-columns > * {
   flex: 1;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.collapsed-granola {
+  flex: 0 !important;
+  min-width: auto !important;
+  overflow: visible !important;
+  display: flex;
+  align-items: flex-start;
 }
 </style>
