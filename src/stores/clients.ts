@@ -5,11 +5,17 @@ import type { ClientResponse } from '@/api'
 
 const state = reactive({
   clients: [] as ClientResponse[],
+  loading: false,
 })
 
 export function useClientStore() {
   async function loadClients() {
-    state.clients = await requestWrapper(ClientsService.getClients())
+    state.loading = true
+    try {
+      state.clients = await requestWrapper(ClientsService.getClients())
+    } finally {
+      state.loading = false
+    }
   }
 
   const confirmedClients = computed(() =>

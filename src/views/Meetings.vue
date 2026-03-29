@@ -24,7 +24,7 @@
       <template v-else>
         <div class="confirmed-columns">
           <EventTodosPanel :suggestion="selected" :meetingNotesId="meetingNotesId" :wideLayout="granolaCollapsed" />
-          <GranolaNotesPanel v-if="!granolaCollapsed" :calendarEventId="selected.calendar_event_id" @notes-loaded="meetingNotesId = $event" @collapse="granolaCollapsed = true" />
+          <GranolaNotesPanel v-if="!granolaCollapsed" :calendarEventId="selected.calendar_event_id" :cachedNotes="notesCache.get(selected.calendar_event_id)" @notes-loaded="meetingNotesId = $event" @notes-fetched="handleNotesFetched" @collapse="granolaCollapsed = true" />
           <div v-else class="collapsed-granola">
             <Button label="Expand Granola" size="small" severity="secondary" text @click="granolaCollapsed = false" />
           </div>
@@ -43,7 +43,7 @@ import EventTodosPanel from '@/components/EventTodosPanel.vue'
 import GranolaNotesPanel from '@/components/GranolaNotesPanel.vue'
 import Button from 'primevue/button'
 import { CalendarSuggestionsService } from '@/api'
-import type { CalendarEventClientSuggestionResponse } from '@/api'
+import type { CalendarEventClientSuggestionResponse, GranolaMeetingNotesResponse } from '@/api'
 import { requestWrapper } from '@/api/client'
 import { useClientStore } from '@/stores/clients'
 import { useSuggestionsStore } from '@/stores/suggestions'
@@ -58,6 +58,11 @@ const daysAgo = ref(3)
 const loading = ref(false)
 const meetingNotesId = ref<number | null>(null)
 const granolaCollapsed = ref(false)
+const notesCache = ref(new Map<number, GranolaMeetingNotesResponse>())
+
+function handleNotesFetched(calendarEventId: number, notes: GranolaMeetingNotesResponse) {
+  notesCache.value.set(calendarEventId, notes)
+}
 
 function sinceTimestamp(days: number): string {
   const d = new Date()

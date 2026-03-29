@@ -8,8 +8,13 @@
       </div>
     </div>
 
-    <TodosUpcoming v-if="activeTab === 'upcoming'" @complete="openComplete" @change-date="openDateChange" />
-    <TodosByClient v-else @complete="openComplete" @change-date="openDateChange" />
+    <div v-if="loading" class="loading">
+      <i class="pi pi-spin pi-spinner" /> Loading todos...
+    </div>
+    <template v-else>
+      <TodosUpcoming v-if="activeTab === 'upcoming'" @complete="openComplete" @change-date="openDateChange" />
+      <TodosByClient v-else @complete="openComplete" @change-date="openDateChange" />
+    </template>
 
     <!-- Mark Complete Confirmation Dialog -->
     <Dialog
@@ -75,7 +80,7 @@ import { requestWrapper } from '@/api/client'
 import { useTodoStore } from '@/stores/todos'
 
 const activeTab = ref<'upcoming' | 'by-client'>('upcoming')
-const { loadTodos } = useTodoStore()
+const { loading, loadTodos } = useTodoStore()
 
 function formatDueDate(dateStr: string): string {
   const [, m, d] = dateStr.split('-')
@@ -193,6 +198,15 @@ async function handleChangeDueDate() {
 
 .tab-btn:hover:not(.active) {
   background: var(--p-surface-50);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--p-surface-500);
+  padding: 2rem 0;
 }
 
 .date-change-form {

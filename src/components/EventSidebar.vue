@@ -1,7 +1,7 @@
 <template>
   <aside class="event-sidebar">
     <div class="sidebar-header">
-      Showing events from past {{ nextDays - 1 }} day{{ nextDays - 1 === 1 ? '' : 's' }}
+      Showing meetings from past {{ nextDays - 1 }} day{{ nextDays - 1 === 1 ? '' : 's' }}
     </div>
     <div ref="eventListEl" class="event-list">
       <div
@@ -34,11 +34,14 @@
       </div>
 
       <p v-if="!events.length && !loading" class="empty-text">No events found.</p>
+      <div v-if="loading && !events.length" class="loading">
+        <i class="pi pi-spin pi-spinner" /> Loading meetings...
+      </div>
     </div>
 
     <div class="sidebar-footer">
       <Button
-        :label="`Show events from ${nextDays} days ago`"
+        :label="`Show meetings from ${nextDays} days ago`"
         icon="pi pi-history"
         severity="secondary"
         text
@@ -193,6 +196,16 @@ function formatDateTime(iso: string): string {
   font-size: 0.8rem;
   color: var(--p-surface-600);
   margin-top: 0.25rem;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--p-surface-500);
+  padding: 2rem 1rem;
 }
 
 .empty-text {

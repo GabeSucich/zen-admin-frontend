@@ -38,10 +38,12 @@ marked.setOptions({ breaks: true })
 
 const props = defineProps<{
   calendarEventId: number
+  cachedNotes?: GranolaMeetingNotesResponse | null
 }>()
 
 const emit = defineEmits<{
   'notes-loaded': [meetingNotesId: number]
+  'notes-fetched': [calendarEventId: number, notes: GranolaMeetingNotesResponse]
   'collapse': []
 }>()
 
@@ -54,7 +56,12 @@ const renderedMarkdown = computed(() =>
   notes.value?.notes_markdown ? marked(notes.value.notes_markdown) : '',
 )
 
-async function loadNotes() {
+async function loadNotes(forceRefresh = false) {
+  if (!forceRefresh && props.cachedNotes != null) {
+    notes.value = props.cachedNotes
+    emit('notes-loaded', props.cachedNotes.id)
+    return
+  }
   loading.value = true
   notes.value = null
   try {
@@ -64,6 +71,7 @@ async function loadNotes() {
     notes.value = (response as any).notes ?? null
     if (notes.value) {
       emit('notes-loaded', notes.value.id)
+      emit('notes-fetched', props.calendarEventId, notes.value)
     }
   } catch {
     // leave notes as null
@@ -76,7 +84,7 @@ async function importNotes() {
   importing.value = true
   try {
     await requestWrapper(MeetingNotesService.ingestGranolaNotes({ days_ago: 7 }))
-    await loadNotes()
+    await loadNotes(true)
   } catch {
     // error handled by requestWrapper
   } finally {

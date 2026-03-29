@@ -1,5 +1,9 @@
 <template>
   <div class="clients-page">
+    <div v-if="loading" class="loading">
+      <i class="pi pi-spin pi-spinner" /> Loading clients...
+    </div>
+    <template v-else>
     <div v-if="!confirmedClientsWithCompleteData.length" class="page-header">
       <h2>Clients</h2>
       <Button label="Add Client" icon="pi pi-plus" size="small" @click="openCreate" />
@@ -79,6 +83,7 @@
       </DataTable>
     </section>
 
+    </template>
     <!-- Edit Dialog -->
     <Dialog
       v-model:visible="showEditDialog"
@@ -218,7 +223,7 @@ import type { ClientResponse, UpdateClientRequest, CreateClientRequest } from '@
 import { requestWrapper } from '@/api/client'
 import { useClientStore } from '@/stores/clients'
 
-const { clients, confirmedClientsWithIncompleteData, confirmedClientsWithCompleteData, loadClients } = useClientStore()
+const { clients, loading, confirmedClientsWithIncompleteData, confirmedClientsWithCompleteData, loadClients } = useClientStore()
 
 const clientSearch = ref('')
 
@@ -388,6 +393,15 @@ function truncate(text: string, max = 40): string {
 
 .form-message {
   margin: 0;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--p-surface-500);
+  padding: 2rem 0;
 }
 
 .missing {

@@ -16,13 +16,19 @@ function addDays(dateStr: string, days: number): string {
 
 const state = reactive({
   todos: [] as TodoResponse[],
+  loading: false,
 })
 
 export function useTodoStore() {
   async function loadTodos() {
-    state.todos = await requestWrapper(
-      TodosService.getConfirmedTodos(undefined, false),
-    )
+    state.loading = true
+    try {
+      state.todos = await requestWrapper(
+        TodosService.getConfirmedTodos(undefined, false),
+      )
+    } finally {
+      state.loading = false
+    }
   }
 
   const overdue = computed(() => {
