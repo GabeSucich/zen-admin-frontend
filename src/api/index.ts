@@ -19,6 +19,8 @@ export type { ConfirmSuggestionRequest } from './models/ConfirmSuggestionRequest
 export type { CreateClientRequest } from './models/CreateClientRequest';
 export type { CreateMeetingTypeTodoTemplateRequest } from './models/CreateMeetingTypeTodoTemplateRequest';
 export type { CreateTodoRequest } from './models/CreateTodoRequest';
+export type { ErrorListResponse } from './models/ErrorListResponse';
+export type { ErrorResponse } from './models/ErrorResponse';
 export type { GetGranolaNotesForEventResponse } from './models/GetGranolaNotesForEventResponse';
 export type { GranolaMeetingNotesResponse } from './models/GranolaMeetingNotesResponse';
 export type { HTTPValidationError } from './models/HTTPValidationError';
@@ -43,6 +45,7 @@ export type { ValidationError } from './models/ValidationError';
 export { AuthService } from './services/AuthService';
 export { CalendarSuggestionsService } from './services/CalendarSuggestionsService';
 export { ClientsService } from './services/ClientsService';
+export { ErrorsService } from './services/ErrorsService';
 export { MeetingNotesService } from './services/MeetingNotesService';
 export { MeetingTypesService } from './services/MeetingTypesService';
 export { MeetingTypeTodoTemplatesService } from './services/MeetingTypeTodoTemplatesService';
