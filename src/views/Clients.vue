@@ -130,15 +130,18 @@
         </div>
         <div class="form-row">
           <label>Charm ID</label>
-          <InputText v-model="editForm.charm_id" />
+          <InputText v-model="editForm.charm_id" placeholder="e.g. PAT0094" />
         </div>
+        <Message v-if="isCharmIdInvalid(editForm.charm_id)" severity="error" :closable="false" class="form-message">
+          Charm ID must match format PAT followed by numbers (e.g. PAT0094).
+        </Message>
         <div class="form-row">
           <label>Notes</label>
           <Textarea v-model="editForm.notes" rows="3" autoResize />
         </div>
       </div>
       <template #footer>
-        <CreateEditFooter :loading="saving" @cancel="showEditDialog = false" @save="handleSave" />
+        <CreateEditFooter :loading="saving" :disabled="isCharmIdInvalid(editForm?.charm_id)" @cancel="showEditDialog = false" @save="handleSave" />
       </template>
     </Dialog>
     <!-- Create Dialog -->
@@ -193,15 +196,18 @@
         </div>
         <div class="form-row">
           <label>Charm ID</label>
-          <InputText v-model="createForm.charm_id" />
+          <InputText v-model="createForm.charm_id" placeholder="e.g. PAT0094" />
         </div>
+        <Message v-if="isCharmIdInvalid(createForm.charm_id)" severity="error" :closable="false" class="form-message">
+          Charm ID must match format PAT followed by numbers (e.g. PAT0094).
+        </Message>
         <div class="form-row">
           <label>Notes</label>
           <Textarea v-model="createForm.notes" rows="3" autoResize />
         </div>
       </div>
       <template #footer>
-        <CreateEditFooter saveLabel="Create Client" :loading="creating" :disabled="!canCreate" @cancel="showCreateDialog = false" @save="handleCreate" />
+        <CreateEditFooter saveLabel="Create Client" :loading="creating" :disabled="!canCreate || isCharmIdInvalid(createForm.charm_id)" @cancel="showCreateDialog = false" @save="handleCreate" />
       </template>
     </Dialog>
   </div>
@@ -242,6 +248,12 @@ const editForm = ref<UpdateClientRequest | null>(null)
 
 const locationOptions = Object.values(Location)
 const membershipOptions = Object.values(MembershipStatus)
+const charmIdPattern = /^PAT\d{4}$/
+
+function isCharmIdInvalid(value: string | undefined | null): boolean {
+  if (!value?.trim()) return false
+  return !charmIdPattern.test(value.trim())
+}
 
 function openEdit(client: ClientResponse) {
   editingClientId.value = client.id

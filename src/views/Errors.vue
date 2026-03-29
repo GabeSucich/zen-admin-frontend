@@ -2,7 +2,13 @@
   <div style="padding: 1.5rem;">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
       <h2 style="margin: 0;">Errors</h2>
-      <Button label="Refresh" icon="pi pi-refresh" @click="resetAndLoad" :loading="loading" />
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <label style="font-size: 0.85rem; white-space: nowrap;">Last
+          <InputNumber v-model="lastNDays" :min="1" :max="365" :inputStyle="{width: '4rem', 'text-align': 'center'}" size="small" @update:modelValue="resetAndLoad" />
+          days
+        </label>
+        <Button label="Refresh" icon="pi pi-refresh" @click="resetAndLoad" :loading="loading" />
+      </div>
     </div>
 
     <DataTable :value="errors" stripedRows
@@ -39,6 +45,7 @@ import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
+import InputNumber from 'primevue/inputnumber'
 import { requestWrapper } from '@/api/client'
 import { ErrorsService } from '@/api'
 import type { ErrorResponse } from '@/api'
@@ -47,6 +54,7 @@ const errors = ref<ErrorResponse[]>([])
 const nextCursor = ref<number | null>(null)
 const loading = ref(false)
 const selectedError = ref<ErrorResponse | null>(null)
+const lastNDays = ref<number>(3)
 
 const showTraceback = computed({
   get: () => selectedError.value !== null,
@@ -63,6 +71,12 @@ function resetAndLoad() {
   loadErrors()
 }
 
+function sinceTimestamp(): string {
+  const d = new Date()
+  d.setDate(d.getDate() - lastNDays.value)
+  return d.toISOString()
+}
+
 async function loadErrors() {
   loading.value = true
   try {
@@ -70,6 +84,7 @@ async function loadErrors() {
       ErrorsService.listErrors(
         10,
         nextCursor.value ?? undefined,
+        sinceTimestamp(),
       ),
     )
     errors.value = [...errors.value, ...res.items]

@@ -1,5 +1,5 @@
 <template>
-  <Menubar :model="items">
+  <Menubar :model="items" @click="handleMenuClick">
     <template #start>
       <img :src="logo" alt="Zen Admin" class="menu-logo" />
     </template>
@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Menubar from 'primevue/menubar'
 import Badge from 'primevue/badge'
@@ -51,30 +51,43 @@ defineEmits<{ refresh: []; logout: [] }>()
 const route = useRoute()
 const router = useRouter()
 const { upcomingCount } = useTodoStore()
+const showErrors = ref(false)
 
-const items = computed(() => [
-  {
-    label: 'Meetings',
-    icon: 'pi pi-calendar',
-    route: '/meetings',
-    command: () => router.push('/meetings'),
-  },
-  {
-    label: 'Todos',
-    icon: 'pi pi-check-square',
-    route: '/todos',
-    command: () => router.push('/todos'),
-    badge: upcomingCount.value || null,
-  },
-  {
-    label: 'Clients',
-    icon: 'pi pi-users',
-    route: '/clients',
-    command: () => router.push('/clients'),
-    // badge: confirmedClientsWithIncompleteData.value.length || null,
-  },
-  { label: 'Templates', icon: 'pi pi-file-edit', route: '/templates', command: () => router.push('/templates') },
-])
+function handleMenuClick(event: MouseEvent) {
+  if (event.altKey) {
+    showErrors.value = !showErrors.value
+  }
+}
+
+const items = computed(() => {
+  const base = [
+    {
+      label: 'Meetings',
+      icon: 'pi pi-calendar',
+      route: '/meetings',
+      command: () => router.push('/meetings'),
+    },
+    {
+      label: 'Todos',
+      icon: 'pi pi-check-square',
+      route: '/todos',
+      command: () => router.push('/todos'),
+      badge: upcomingCount.value || null,
+    },
+    {
+      label: 'Clients',
+      icon: 'pi pi-users',
+      route: '/clients',
+      command: () => router.push('/clients'),
+      // badge: confirmedClientsWithIncompleteData.value.length || null,
+    },
+    { label: 'Templates', icon: 'pi pi-file-edit', route: '/templates', command: () => router.push('/templates') },
+  ]
+  if (showErrors.value) {
+    base.push({ label: 'Errors', icon: 'pi pi-exclamation-triangle', route: '/errors', command: () => router.push('/errors') })
+  }
+  return base
+})
 </script>
 
 <style scoped>
