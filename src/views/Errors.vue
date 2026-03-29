@@ -68,7 +68,7 @@ async function loadErrors() {
   try {
     const res = await requestWrapper(
       ErrorsService.listErrors(
-        1,
+        10,
         nextCursor.value ?? undefined,
       ),
     )
