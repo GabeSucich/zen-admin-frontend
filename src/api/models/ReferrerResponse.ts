@@ -13,6 +13,7 @@ export type ReferrerResponse = {
     created_at: string;
     total_bookings: number;
     qualifying_referrals: number;
+    purchases: number;
     rewards_issued: number;
     rewards_owed: number;
 };

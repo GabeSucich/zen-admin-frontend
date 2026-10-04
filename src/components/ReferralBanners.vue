@@ -6,9 +6,19 @@
           <strong>Referred by {{ referredBy.referrer_name }}.</strong>
           {{ referredByDetail }}
         </span>
-        <router-link :to="{ path: '/referrals', query: { referrer: referredBy.referrer_id } }" class="banner-link">
-          View referral
-        </router-link>
+        <div class="banner-actions">
+          <Button
+            v-if="canMarkPurchase"
+            label="Mark purchase made"
+            icon="pi pi-shopping-bag"
+            size="small"
+            :loading="saving"
+            @click="markPurchased"
+          />
+          <router-link :to="{ path: '/referrals', query: { referrer: referredBy.referrer_id } }" class="banner-link">
+            View referral
+          </router-link>
+        </div>
       </div>
     </Message>
 
@@ -17,7 +27,7 @@
         <span>
           <strong>{{ referrerRewards.referrer_name }}</strong> is owed
           {{ referrerRewards.rewards_owed }} referral
-          {{ referrerRewards.rewards_owed === 1 ? 'reward' : 'rewards' }}.
+          {{ referrerRewards.rewards_owed === 1 ? 'reward' : 'rewards' }} (20% off a purchase each).
         </span>
         <router-link
           :to="{ path: '/referrals', query: { referrer: referrerRewards.referrer_id, owed: '1' } }"
@@ -31,26 +41,52 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import Message from 'primevue/message'
-import { ReferralStatus } from '@/api'
+import Button from 'primevue/button'
+import { ReferralsService, ReferralStatus } from '@/api'
 import type { CalendarEventClientSuggestionResponse } from '@/api'
+import { requestWrapper } from '@/api/client'
 
 const props = defineProps<{
   suggestion: CalendarEventClientSuggestionResponse
 }>()
 
+const emit = defineEmits<{ updated: [] }>()
+
 const referredBy = computed(() => props.suggestion.referred_by ?? null)
 const referrerRewards = computed(() => props.suggestion.referrer_rewards ?? null)
+const saving = ref(false)
+
+const canMarkPurchase = computed(() => {
+  const r = referredBy.value
+  return !!r && r.qualifies && !r.purchased_at && r.status !== ReferralStatus.CANCELED
+})
 
 const referredByDetail = computed(() => {
   const r = referredBy.value
   if (!r) return ''
-  if (r.status === ReferralStatus.CANCELED) return 'This referral booking was canceled.'
-  if (!r.qualifies) return "This booking doesn't qualify for a referral reward."
-  if (r.reward_issued_at) return `Referral reward issued ${new Date(r.reward_issued_at).toLocaleDateString()}.`
-  return 'First appointment — qualifies for a referral reward.'
+  const referrerFirstName = r.referrer_name.split(' ')[0]
+  if (r.status === ReferralStatus.CANCELED && !r.purchased_at) return 'This referral booking was canceled.'
+  if (!r.qualifies) return "Gets 20% off their next purchase. Not eligible for a referrer reward."
+  if (r.reward_issued_at) {
+    return `Purchase recorded; ${referrerFirstName}'s reward was issued ${new Date(r.reward_issued_at).toLocaleDateString()}.`
+  }
+  if (r.purchased_at) return `Purchase recorded; ${referrerFirstName}'s referral reward is now owed.`
+  return `New patient: gets 20% off their next purchase. Once they make a purchase, ${referrerFirstName} earns a reward.`
 })
+
+async function markPurchased() {
+  const r = referredBy.value
+  if (!r) return
+  saving.value = true
+  try {
+    await requestWrapper(ReferralsService.updateReferral(r.referral_id, { purchased: true }))
+    emit('updated')
+  } finally {
+    saving.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -76,6 +112,13 @@ const referredByDetail = computed(() => {
   justify-content: space-between;
   gap: 1rem;
   width: 100%;
+}
+
+.banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
 }
 
 .banner-link {

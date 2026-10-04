@@ -86,7 +86,7 @@ export class ReferralsService {
     }
     /**
      * Update Referral
-     * Update status, override qualification, record a reward as issued, or edit notes.
+     * Update status, override qualification, record a purchase or issued reward, or edit notes.
      * @param referralId
      * @param requestBody
      * @returns ReferralResponse Successful Response

@@ -11,7 +11,7 @@
     />
 
     <div v-if="selected" class="main-content">
-      <ReferralBanners :suggestion="selected" />
+      <ReferralBanners :suggestion="selected" @updated="handleReferralUpdated" />
       <template v-if="!selected.user_confirmed">
         <div class="detail-columns">
           <EventInfoPanel :suggestion="selected" />
@@ -49,9 +49,11 @@ import type { CalendarEventClientSuggestionResponse, GranolaMeetingNotesResponse
 import { requestWrapper } from '@/api/client'
 import { useClientStore } from '@/stores/clients'
 import { useSuggestionsStore } from '@/stores/suggestions'
+import { useReferralStore } from '@/stores/referrals'
 
 const { loadClients } = useClientStore()
 const { loadSuggestions } = useSuggestionsStore()
+const { loadReferrals } = useReferralStore()
 
 const sidebar = ref<InstanceType<typeof EventSidebar> | null>(null)
 const events = ref<CalendarEventClientSuggestionResponse[]>([])
@@ -93,6 +95,13 @@ async function handleConfirmed(result: CalendarEventClientSuggestionResponse) {
   selected.value = events.value.find((e) => e.id === result.id) ?? result
   loadSuggestions()
   loadClients()
+}
+
+async function handleReferralUpdated() {
+  const selectedId = selected.value?.id
+  await fetchEvents()
+  selected.value = events.value.find((e) => e.id === selectedId) ?? selected.value
+  loadReferrals()
 }
 
 async function handleIgnored() {

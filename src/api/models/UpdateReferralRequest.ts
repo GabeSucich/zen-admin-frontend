@@ -6,6 +6,7 @@ import type { ReferralStatus } from './ReferralStatus';
 export type UpdateReferralRequest = {
     status?: (ReferralStatus | null);
     qualifies?: (boolean | null);
+    purchased?: (boolean | null);
     reward_issued?: (boolean | null);
     notes?: (string | null);
 };

@@ -5,6 +5,7 @@
       <div class="summary">
         <span class="summary-item"><strong>{{ referrers.length }}</strong> referrers</span>
         <span class="summary-item"><strong>{{ qualifyingCount }}</strong> qualifying referrals</span>
+        <span class="summary-item"><strong>{{ purchaseCount }}</strong> purchases</span>
         <span class="summary-item" :class="{ owed: rewardsOwedCount }"><strong>{{ rewardsOwedCount }}</strong> rewards owed</span>
       </div>
     </div>
@@ -80,6 +81,25 @@
                 </div>
               </template>
             </Column>
+            <Column header="Purchase">
+              <template #body="{ data }">
+                <div v-if="data.purchased_at" class="reward-issued">
+                  <span><i class="pi pi-check" /> {{ formatDate(data.purchased_at) }}</span>
+                  <Button label="Undo" size="small" text severity="secondary" :loading="savingId === data.id" @click="setPurchased(data, false)" />
+                </div>
+                <Button
+                  v-else-if="data.status !== ReferralStatus.CANCELED"
+                  label="Mark purchased"
+                  icon="pi pi-shopping-bag"
+                  size="small"
+                  severity="secondary"
+                  outlined
+                  :loading="savingId === data.id"
+                  @click="setPurchased(data, true)"
+                />
+                <span v-else class="sub">—</span>
+              </template>
+            </Column>
             <Column header="Reward">
               <template #body="{ data }">
                 <div v-if="data.reward_issued_at" class="reward-issued">
@@ -94,6 +114,7 @@
                   :loading="savingId === data.id"
                   @click="setRewardIssued(data, true)"
                 />
+                <span v-else-if="data.qualifies && data.status !== ReferralStatus.CANCELED" class="sub">Awaiting purchase</span>
                 <span v-else class="sub">—</span>
               </template>
             </Column>
@@ -129,6 +150,7 @@
             </Column>
             <Column field="total_bookings" header="Bookings" />
             <Column field="qualifying_referrals" header="Qualifying" />
+            <Column field="purchases" header="Purchases" />
             <Column header="Rewards owed">
               <template #body="{ data }">
                 <Tag v-if="data.rewards_owed" :value="String(data.rewards_owed)" severity="warn" />
@@ -224,12 +246,17 @@ const referrerOptions = computed(() =>
   referrers.value.map((r) => ({ label: `${r.first_name} ${r.last_name}`, value: r.id })),
 )
 
+// Referrers earn a reward once a qualifying (new patient) referral makes a purchase
 function isRewardOwed(r: ReferralResponse): boolean {
-  return r.qualifies && r.status !== ReferralStatus.CANCELED && !r.reward_issued_at
+  return r.qualifies && !!r.purchased_at && !r.reward_issued_at
 }
 
 const qualifyingCount = computed(() =>
   referrals.value.filter((r) => r.qualifies && r.status !== ReferralStatus.CANCELED).length,
+)
+
+const purchaseCount = computed(() =>
+  referrals.value.filter((r) => r.qualifies && r.purchased_at).length,
 )
 
 const filteredReferrals = computed(() => {
@@ -303,6 +330,16 @@ function truncate(text: string, max = 40): string {
 
 const savingId = ref<number | null>(null)
 const savingReferrerId = ref<number | null>(null)
+
+async function setPurchased(referral: ReferralResponse, purchased: boolean) {
+  savingId.value = referral.id
+  try {
+    await requestWrapper(ReferralsService.updateReferral(referral.id, { purchased }))
+    await loadReferrals()
+  } finally {
+    savingId.value = null
+  }
+}
 
 async function setRewardIssued(referral: ReferralResponse, issued: boolean) {
   savingId.value = referral.id

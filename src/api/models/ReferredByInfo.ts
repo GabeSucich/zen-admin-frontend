@@ -12,6 +12,7 @@ export type ReferredByInfo = {
     referrer_name: string;
     status: ReferralStatus;
     qualifies: boolean;
+    purchased_at: (string | null);
     reward_issued_at: (string | null);
 };
 
