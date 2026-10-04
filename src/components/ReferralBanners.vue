@@ -27,7 +27,8 @@
         <span>
           <strong>{{ referrerRewards.referrer_name }}</strong> is owed
           {{ referrerRewards.rewards_owed }} referral
-          {{ referrerRewards.rewards_owed === 1 ? 'reward' : 'rewards' }} (20% off a purchase each).
+          {{ referrerRewards.rewards_owed === 1 ? 'reward' : 'rewards' }}: 20% off their next
+          purchase{{ referrerRewards.rewards_owed === 1 ? '' : ' for each' }}.
         </span>
         <router-link
           :to="{ path: '/referrals', query: { referrer: referrerRewards.referrer_id, owed: '1' } }"
@@ -68,12 +69,12 @@ const referredByDetail = computed(() => {
   if (!r) return ''
   const referrerFirstName = r.referrer_name.split(' ')[0]
   if (r.status === ReferralStatus.CANCELED && !r.purchased_at) return 'This referral booking was canceled.'
-  if (!r.qualifies) return "Gets 20% off their next purchase. Not eligible for a referrer reward."
+  if (!r.qualifies) return "Gets 20% off their first purchase. Not eligible for a referrer reward."
   if (r.reward_issued_at) {
     return `Purchase recorded; ${referrerFirstName}'s reward was issued ${new Date(r.reward_issued_at).toLocaleDateString()}.`
   }
   if (r.purchased_at) return `Purchase recorded; ${referrerFirstName}'s referral reward is now owed.`
-  return `New patient: gets 20% off their next purchase. Once they make a purchase, ${referrerFirstName} earns a reward.`
+  return `New patient: gets 20% off their first purchase. Once they make a purchase, ${referrerFirstName} earns a reward.`
 })
 
 async function markPurchased() {
