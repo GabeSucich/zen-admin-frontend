@@ -16,7 +16,7 @@
             @click="applyRefereeDiscount"
           />
           <router-link
-            :to="{ path: '/referrals', query: { tab: 'referees', referrer: referredBy.referrer_id, all: '1' } }"
+            :to="{ path: '/referrals', query: { tab: 'referees', referrer: referredBy.referrer_id } }"
             class="banner-link"
           >
             View referee

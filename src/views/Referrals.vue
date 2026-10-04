@@ -257,10 +257,9 @@ const { referrers, referrals, loading, loadReferrals, activeReferrerDiscountCoun
 
 const statusOptions = Object.values(ReferralStatus)
 
-// Banner links: ?tab=referrers|referees, ?referrer=<id> (expands / filters to that referrer), ?all=1 (include applied)
+// Banner links: ?tab=referrers|referees, ?referrer=<id> (expands / filters to that referrer)
 const queryReferrer = route.query.referrer ? Number(route.query.referrer) : null
 const activeTab = ref(route.query.tab === 'referees' ? 'referees' : 'referrers')
-const showAll = route.query.all === '1'
 
 // --- Discount rules ---
 // The referee's 20% off first purchase is stored as referee_discount_applied_at; applying it earns the referrer a
@@ -279,7 +278,7 @@ const activeRefereeDiscounts = computed(() => referrals.value.filter(hasActiveRe
 // --- Referrers tab ---
 
 const referrerSearch = ref('')
-const referrersActiveOnly = ref(!showAll)
+const referrersActiveOnly = ref(false)
 const expandedReferrers = ref<Record<number, boolean>>(
   queryReferrer !== null && activeTab.value === 'referrers' ? { [queryReferrer]: true } : {},
 )
@@ -314,7 +313,7 @@ function showRefereesFor(referrerId: number) {
 const referrerFilter = ref<number | null>(activeTab.value === 'referees' ? queryReferrer : null)
 const statusFilter = ref<ReferralStatus | null>(null)
 const dateRange = ref<(Date | null)[] | null>(null)
-const refereesActiveOnly = ref(!showAll)
+const refereesActiveOnly = ref(false)
 
 const referrerOptions = computed(() =>
   referrers.value.map((r) => ({ label: `${r.first_name} ${r.last_name}`, value: r.id })),
