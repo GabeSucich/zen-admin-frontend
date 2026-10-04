@@ -3,11 +3,11 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Someone at this meeting is a referrer with rewards owed.
+ * Someone at this meeting is a referrer with active referral discounts.
  */
-export type ReferrerRewardInfo = {
+export type ReferrerDiscountInfo = {
     referrer_id: number;
     referrer_name: string;
-    rewards_owed: number;
+    active_referrer_discounts: number;
 };
 

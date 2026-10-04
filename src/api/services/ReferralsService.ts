@@ -13,7 +13,7 @@ import { request as __request } from '../core/request';
 export class ReferralsService {
     /**
      * Get Referrers
-     * All referrers with booking and reward counts.
+     * All referrers with booking and discount counts.
      * @returns ReferrerResponse Successful Response
      * @throws ApiError
      */
@@ -54,7 +54,7 @@ export class ReferralsService {
      * @param referrerId
      * @param status
      * @param qualifies
-     * @param rewardOwed
+     * @param referrerDiscountActiveOnly
      * @param scheduledFrom
      * @param scheduledTo
      * @returns ReferralResponse Successful Response
@@ -64,7 +64,7 @@ export class ReferralsService {
         referrerId?: (number | null),
         status?: (ReferralStatus | null),
         qualifies?: (boolean | null),
-        rewardOwed?: (boolean | null),
+        referrerDiscountActiveOnly?: (boolean | null),
         scheduledFrom?: (string | null),
         scheduledTo?: (string | null),
     ): CancelablePromise<Array<ReferralResponse>> {
@@ -75,7 +75,7 @@ export class ReferralsService {
                 'referrer_id': referrerId,
                 'status': status,
                 'qualifies': qualifies,
-                'reward_owed': rewardOwed,
+                'referrer_discount_active_only': referrerDiscountActiveOnly,
                 'scheduled_from': scheduledFrom,
                 'scheduled_to': scheduledTo,
             },
@@ -86,7 +86,7 @@ export class ReferralsService {
     }
     /**
      * Update Referral
-     * Update status, override qualification, record a purchase or issued reward, or edit notes.
+     * Update status, override qualification, mark either discount applied, or edit notes.
      * @param referralId
      * @param requestBody
      * @returns ReferralResponse Successful Response

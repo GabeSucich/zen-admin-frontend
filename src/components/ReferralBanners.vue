@@ -8,15 +8,18 @@
         </span>
         <div class="banner-actions">
           <Button
-            v-if="canMarkPurchase"
-            label="Mark purchase made"
-            icon="pi pi-shopping-bag"
+            v-if="canApplyDiscount"
+            label="Mark discount applied"
+            icon="pi pi-tag"
             size="small"
             :loading="saving"
-            @click="markPurchased"
+            @click="applyRefereeDiscount"
           />
-          <router-link :to="{ path: '/referrals', query: { referrer: referredBy.referrer_id } }" class="banner-link">
-            View referral
+          <router-link
+            :to="{ path: '/referrals', query: { tab: 'referees', referrer: referredBy.referrer_id, all: '1' } }"
+            class="banner-link"
+          >
+            View referee
           </router-link>
         </div>
       </div>
@@ -25,16 +28,16 @@
     <Message v-if="referrerRewards" severity="warn" icon="pi pi-gift" :closable="false">
       <div class="banner-body">
         <span>
-          <strong>{{ referrerRewards.referrer_name }}</strong> is owed
-          {{ referrerRewards.rewards_owed }} referral
-          {{ referrerRewards.rewards_owed === 1 ? 'reward' : 'rewards' }}: 20% off their next
-          purchase{{ referrerRewards.rewards_owed === 1 ? '' : ' for each' }}.
+          <strong>{{ referrerRewards.referrer_name }}</strong> has
+          {{ referrerRewards.active_referrer_discounts }} active referral
+          {{ referrerRewards.active_referrer_discounts === 1 ? 'discount' : 'discounts' }}: 20% off their next
+          purchase{{ referrerRewards.active_referrer_discounts === 1 ? '' : ' for each' }}.
         </span>
         <router-link
-          :to="{ path: '/referrals', query: { referrer: referrerRewards.referrer_id, owed: '1' } }"
+          :to="{ path: '/referrals', query: { tab: 'referrers', referrer: referrerRewards.referrer_id } }"
           class="banner-link"
         >
-          Review rewards
+          Review discounts
         </router-link>
       </div>
     </Message>
@@ -56,33 +59,33 @@ const props = defineProps<{
 const emit = defineEmits<{ updated: [] }>()
 
 const referredBy = computed(() => props.suggestion.referred_by ?? null)
-const referrerRewards = computed(() => props.suggestion.referrer_rewards ?? null)
+const referrerRewards = computed(() => props.suggestion.referrer_discounts ?? null)
 const saving = ref(false)
 
-const canMarkPurchase = computed(() => {
+const canApplyDiscount = computed(() => {
   const r = referredBy.value
-  return !!r && r.qualifies && !r.purchased_at && r.status !== ReferralStatus.CANCELED
+  return !!r && r.qualifies && !r.referee_discount_applied_at && r.status !== ReferralStatus.CANCELED
 })
 
 const referredByDetail = computed(() => {
   const r = referredBy.value
   if (!r) return ''
   const referrerFirstName = r.referrer_name.split(' ')[0]
-  if (r.status === ReferralStatus.CANCELED && !r.purchased_at) return 'This referral booking was canceled.'
-  if (!r.qualifies) return "Gets 20% off their first purchase. Not eligible for a referrer reward."
-  if (r.reward_issued_at) {
-    return `Purchase recorded; ${referrerFirstName}'s reward was issued ${new Date(r.reward_issued_at).toLocaleDateString()}.`
+  if (r.status === ReferralStatus.CANCELED && !r.referee_discount_applied_at) return 'This referral booking was canceled.'
+  if (!r.qualifies) return 'Not eligible for referral discounts.'
+  if (r.referrer_discount_applied_at) {
+    return `Their 20% discount was applied, and ${referrerFirstName}'s referral discount was applied ${new Date(r.referrer_discount_applied_at).toLocaleDateString()}.`
   }
-  if (r.purchased_at) return `Purchase recorded; ${referrerFirstName}'s referral reward is now owed.`
-  return `New patient: gets 20% off their first purchase. Once they make a purchase, ${referrerFirstName} earns a reward.`
+  if (r.referee_discount_applied_at) return `Their 20% discount was applied; ${referrerFirstName} now has an active referral discount.`
+  return `New patient: gets 20% off their first purchase. Once it's applied, ${referrerFirstName} earns 20% off their next purchase.`
 })
 
-async function markPurchased() {
+async function applyRefereeDiscount() {
   const r = referredBy.value
   if (!r) return
   saving.value = true
   try {
-    await requestWrapper(ReferralsService.updateReferral(r.referral_id, { purchased: true }))
+    await requestWrapper(ReferralsService.updateReferral(r.referral_id, { referee_discount_applied: true }))
     emit('updated')
   } finally {
     saving.value = false

@@ -24,13 +24,13 @@ export function useReferralStore() {
     }
   }
 
-  const rewardsOwedCount = computed(() =>
-    state.referrers.reduce((sum, r) => sum + r.rewards_owed, 0),
+  const activeReferrerDiscountCount = computed(() =>
+    state.referrers.reduce((sum, r) => sum + r.active_referrer_discounts, 0),
   )
 
   return {
     ...toRefs(state),
     loadReferrals,
-    rewardsOwedCount,
+    activeReferrerDiscountCount,
   }
 }

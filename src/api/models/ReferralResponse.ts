@@ -18,8 +18,8 @@ export type ReferralResponse = {
     is_self_referral: boolean;
     qualifies: boolean;
     rescheduled_from_id: (number | null);
-    purchased_at: (string | null);
-    reward_issued_at: (string | null);
+    referee_discount_applied_at: (string | null);
+    referrer_discount_applied_at: (string | null);
     notes: (string | null);
     created_at: string;
     updated_at: string;

@@ -39,8 +39,8 @@ export type { ProcessCalendarEventsRequest } from './models/ProcessCalendarEvent
 export type { ReferralResponse } from './models/ReferralResponse';
 export { ReferralStatus } from './models/ReferralStatus';
 export type { ReferredByInfo } from './models/ReferredByInfo';
+export type { ReferrerDiscountInfo } from './models/ReferrerDiscountInfo';
 export type { ReferrerResponse } from './models/ReferrerResponse';
-export type { ReferrerRewardInfo } from './models/ReferrerRewardInfo';
 export type { TodoResponse } from './models/TodoResponse';
 export { TodoSource } from './models/TodoSource';
 export { TodoType } from './models/TodoType';

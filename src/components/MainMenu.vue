@@ -52,7 +52,7 @@ defineEmits<{ refresh: []; logout: [] }>()
 const route = useRoute()
 const router = useRouter()
 const { upcomingCount } = useTodoStore()
-const { rewardsOwedCount } = useReferralStore()
+const { activeReferrerDiscountCount } = useReferralStore()
 const showErrors = ref(false)
 
 function handleMenuClick(event: MouseEvent) {
@@ -89,7 +89,7 @@ const items = computed(() => {
       icon: 'pi pi-gift',
       route: '/referrals',
       command: () => router.push('/referrals'),
-      badge: rewardsOwedCount.value || null,
+      badge: activeReferrerDiscountCount.value || null,
     },
   ]
   if (showErrors.value) {
