@@ -11,6 +11,7 @@
     />
 
     <div v-if="selected" class="main-content">
+      <ReferralBanners :suggestion="selected" />
       <template v-if="!selected.user_confirmed">
         <div class="detail-columns">
           <EventInfoPanel :suggestion="selected" />
@@ -41,6 +42,7 @@ import EventInfoPanel from '@/components/EventInfoPanel.vue'
 import EventConfirmPanel from '@/components/EventConfirmPanel.vue'
 import EventTodosPanel from '@/components/EventTodosPanel.vue'
 import GranolaNotesPanel from '@/components/GranolaNotesPanel.vue'
+import ReferralBanners from '@/components/ReferralBanners.vue'
 import Button from 'primevue/button'
 import { CalendarSuggestionsService } from '@/api'
 import type { CalendarEventClientSuggestionResponse, GranolaMeetingNotesResponse } from '@/api'

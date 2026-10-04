@@ -4,6 +4,8 @@
 /* eslint-disable */
 import type { ClientResponse } from './ClientResponse';
 import type { MeetingType } from './MeetingType';
+import type { ReferredByInfo } from './ReferredByInfo';
+import type { ReferrerRewardInfo } from './ReferrerRewardInfo';
 import type { TodoResponse } from './TodoResponse';
 export type CalendarEventClientSuggestionResponse = {
     id: number;
@@ -17,6 +19,8 @@ export type CalendarEventClientSuggestionResponse = {
     title: string;
     description: (string | null);
     start_time: string;
+    referred_by?: (ReferredByInfo | null);
+    referrer_rewards?: (ReferrerRewardInfo | null);
     readonly gcal_link: string;
 };
 

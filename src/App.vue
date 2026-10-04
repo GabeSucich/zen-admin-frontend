@@ -16,6 +16,7 @@ import { useClientStore } from '@/stores/clients'
 import { useSuggestionsStore } from '@/stores/suggestions'
 import { useMeetingTypesStore } from '@/stores/meetingTypes'
 import { useTodoStore } from '@/stores/todos'
+import { useReferralStore } from '@/stores/referrals'
 
 const router = useRouter()
 const route = useRoute()
@@ -24,13 +25,14 @@ const { loadClients } = useClientStore()
 const { loadSuggestions } = useSuggestionsStore()
 const { loadMeetingTypes } = useMeetingTypesStore()
 const { loadTodos } = useTodoStore()
+const { loadReferrals } = useReferralStore()
 
 const refreshing = ref(false)
 
 async function refreshDashboard() {
   refreshing.value = true
   try {
-    await Promise.all([loadClients(), loadSuggestions(), loadMeetingTypes(), loadTodos()])
+    await Promise.all([loadClients(), loadSuggestions(), loadMeetingTypes(), loadTodos(), loadReferrals()])
   } finally {
     refreshing.value = false
   }

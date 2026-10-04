@@ -44,6 +44,7 @@ import Button from 'primevue/button'
 import logo from '@/assets/images/zenlogo_nobackground_resized_md.png'
 // import { useClientStore } from '@/stores/clients'
 import { useTodoStore } from '@/stores/todos'
+import { useReferralStore } from '@/stores/referrals'
 
 defineProps<{ refreshing: boolean }>()
 defineEmits<{ refresh: []; logout: [] }>()
@@ -51,6 +52,7 @@ defineEmits<{ refresh: []; logout: [] }>()
 const route = useRoute()
 const router = useRouter()
 const { upcomingCount } = useTodoStore()
+const { rewardsOwedCount } = useReferralStore()
 const showErrors = ref(false)
 
 function handleMenuClick(event: MouseEvent) {
@@ -82,6 +84,13 @@ const items = computed(() => {
       // badge: confirmedClientsWithIncompleteData.value.length || null,
     },
     { label: 'Templates', icon: 'pi pi-file-edit', route: '/templates', command: () => router.push('/templates') },
+    {
+      label: 'Referrals',
+      icon: 'pi pi-gift',
+      route: '/referrals',
+      command: () => router.push('/referrals'),
+      badge: rewardsOwedCount.value || null,
+    },
   ]
   if (showErrors.value) {
     base.push({ label: 'Errors', icon: 'pi pi-exclamation-triangle', route: '/errors', command: () => router.push('/errors') })

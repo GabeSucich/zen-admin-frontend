@@ -5,6 +5,7 @@ import Clients from '@/views/Clients.vue'
 import Templates from '@/views/Templates.vue'
 import Meetings from '@/views/Meetings.vue'
 import Errors from '@/views/Errors.vue'
+import Referrals from '@/views/Referrals.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -16,6 +17,7 @@ const router = createRouter({
     { path: '/todos', component: Todos },
     { path: '/clients', component: Clients },
     { path: '/templates', component: Templates },
+    { path: '/referrals', component: Referrals },
     { path: '/errors', component: Errors },
     { path: '/:pathMatch(.*)*', redirect: '/todos' },
   ],
